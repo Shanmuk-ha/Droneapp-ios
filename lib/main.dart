@@ -880,7 +880,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _SectionHeader(title: 'About'),
           _SettingsItem(
             title: 'App version',
-            subtitle: '1.0.0 (build 1)',
+            subtitle: '1.0.6 (build 1)',
             icon: Icons.info_outline,
             onTap: () {},
             showChevron: false,
