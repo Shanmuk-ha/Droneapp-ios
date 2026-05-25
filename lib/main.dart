@@ -150,6 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
     _logoController.dispose();
     _barController.dispose();
     super.dispose();
+
   }
 
   @override
@@ -2494,6 +2495,10 @@ class _DroneControllerState extends State<DroneController> {
   bool isRecording     = false;
   bool _showTutorial   = false;
   bool _isEncoding     = false;
+  int _headless = 0;   // toggles between 0 and 1
+  int _flip = 0;       // momentary 1 then back to 0
+  bool _flipDisabled = false;
+  Timer? _flipTimer;
 
   int _txFailCount = 0;
   static const int _maxTxFails = 10; // 10 consecutive fails = disconnected
@@ -2578,6 +2583,7 @@ class _DroneControllerState extends State<DroneController> {
     _videoService?.disconnect();
     _recordTimer?.cancel();
     super.dispose();
+    _flipTimer?.cancel();
   }
 
   Future<void> _loadValues() async {
@@ -2612,22 +2618,155 @@ class _DroneControllerState extends State<DroneController> {
     if (!isArmed) return;
     if (socket == null) return;
     try {
+
       final data =
-          '$roll,$pitch,$throttle,$yaw,$p,$i,$d,$a,$rT,$pT\n';
+          '$roll,$pitch,$throttle,$yaw,$p,$i,$d,$a,$rT,$pT,$_headless,$_flip\n';
       socket!.send(
           data.codeUnits, InternetAddress(droneIp), udpPort);
-      // Reset fail counter on success
-      _txFailCount = 0;
       if (mounted) setState(() => txError = false);
     } catch (e) {
-      _txFailCount++;
       if (mounted) setState(() => txError = true);
-      // If many consecutive fails, drone is gone
-      if (_txFailCount >= _maxTxFails) {
-        _handleDroneDisconnect();
-      }
     }
   }
+  //Head and Flip
+
+  void _toggleHeadless() {
+    setState(() => _headless = _headless == 0 ? 1 : 0);
+    sendData();
+  }
+
+  void _triggerFlip() {
+    if (_flipDisabled) return;
+    setState(() {
+      _flip = 1;
+      _flipDisabled = true;
+    });
+    sendData();
+    // Reset flip back to 0 after 200ms
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (!mounted) return;
+      setState(() => _flip = 0);
+      sendData();
+    });
+    // Re-enable button after 5 seconds
+    _flipTimer?.cancel();
+    _flipTimer = Timer(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() => _flipDisabled = false);
+    });
+  }
+
+  Widget _buildFlightButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // ── Headless button ──
+        GestureDetector(
+          onTap: _toggleHeadless,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: _headless == 1
+                  ? const Color(0xFF0A1628)
+                  : AppTheme.isDark
+                  ? const Color(0xFF11152A)
+                  : const Color(0xFFE8EEFF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _headless == 1
+                    ? const Color(0xFF38BDF8)
+                    : AppTheme.border,
+                width: _headless == 1 ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.explore,
+                  size: 13,
+                  color: _headless == 1
+                      ? const Color(0xFF38BDF8)
+                      : AppTheme.subtext,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  _headless == 1 ? 'HEADLESS' : 'HEADLESS',
+                  style: TextStyle(
+                    color: _headless == 1
+                        ? const Color(0xFF38BDF8)
+                        : AppTheme.subtext,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 10),
+
+        // ── Flip button — same style as headless ──
+        GestureDetector(
+          onTap: _flipDisabled ? null : _triggerFlip,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: _flip == 1
+                  ? const Color(0xFF38BDF8)
+                  : AppTheme.isDark
+                  ? const Color(0xFF11152A)
+                  : const Color(0xFFE8EEFF),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _flipDisabled
+                    ? AppTheme.border.withOpacity(0.3)
+                    : _flip == 1
+                    ? const Color(0xFFF59E0B)
+                    : AppTheme.border,
+                width: _flip == 1 ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.flip_camera_android,
+                  size: 13,
+                  color: _flipDisabled
+                      ? AppTheme.subtext.withOpacity(0.3)
+                      : _flip == 1
+                      ? const Color(0xFFF59E0B)
+                      : AppTheme.subtext,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  'FLIP',
+                  style: TextStyle(
+                    color: _flipDisabled
+                        ? AppTheme.subtext.withOpacity(0.3)
+                        : _flip == 1
+                        ? const Color(0xFFF59E0B)
+                        : AppTheme.subtext,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   void _handleDroneDisconnect() {
     if (!mounted) return;
@@ -2912,7 +3051,7 @@ class _DroneControllerState extends State<DroneController> {
         // Send to native encoder — every 3rd frame = 10fps
         if (isRecording && !_isSaving) {
           _framesSent++;
-          if (_framesSent % 1 != 0) return;
+          if (_framesSent % 3 != 0) return;
           // Fire and forget — don't await
           _videoChannel.invokeMethod('addFrame', {
             'bytes': Uint8List.fromList(frameData),
@@ -3316,12 +3455,10 @@ class _DroneControllerState extends State<DroneController> {
                             left: size.width * 0.34,
                             right: size.width * 0.34,
                             child: Column(
-                              mainAxisAlignment:
-                              MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
                                     _telemetryBox('ROLL',
                                         '${rollDeg.toStringAsFixed(1)}°'),
@@ -3331,15 +3468,16 @@ class _DroneControllerState extends State<DroneController> {
                                 ),
                                 const SizedBox(height: 6),
                                 Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    _telemetryBox('THR', '$thrPct%',
-                                        highlight: true),
+                                    _telemetryBox('THR', '$thrPct%', highlight: true),
                                     _telemetryBox('YAW',
                                         '${yawDeg.toStringAsFixed(1)}°'),
                                   ],
                                 ),
+                                const SizedBox(height: 48),
+                                // ── Headless + Flip buttons ──
+                                _buildFlightButtons(),
                               ],
                             ),
                           ),
@@ -3631,100 +3769,100 @@ class _DroneControllerState extends State<DroneController> {
               ),
             ),
 
-          // Debug log button
-          // GestureDetector(
-          //   onTap: () async {
-          //     final allLogs = await _DebugLog.getAll();
-          //     if (!mounted) return;
-          //     showDialog(
-          //       context: context,
-          //       builder: (ctx) => AlertDialog(
-          //         backgroundColor: const Color(0xFF0A0E1A),
-          //         shape: RoundedRectangleBorder(
-          //             borderRadius: BorderRadius.circular(12)),
-          //         title: Row(
-          //           mainAxisAlignment:
-          //           MainAxisAlignment.spaceBetween,
-          //           children: [
-          //             const Text('Debug Log',
-          //                 style: TextStyle(
-          //                     color: Color(0xFF5A7AFF),
-          //                     fontSize: 14)),
-          //             TextButton(
-          //               onPressed: () async {
-          //                 await _DebugLog.clear();
-          //                 Navigator.pop(ctx);
-          //               },
-          //               child: const Text('Clear',
-          //                   style: TextStyle(
-          //                       color: Color(0xFFFF5757),
-          //                       fontSize: 12)),
-          //             ),
-          //           ],
-          //         ),
-          //         content: SizedBox(
-          //           width: double.maxFinite,
-          //           height: 350,
-          //           child: allLogs.isEmpty
-          //               ? const Center(
-          //               child: Text('No logs',
-          //                   style: TextStyle(
-          //                       color: Color(0xFF4A5A88))))
-          //               : ListView.builder(
-          //             reverse: true,
-          //             itemCount: allLogs.length,
-          //             itemBuilder: (_, i) {
-          //               final log = allLogs[
-          //               allLogs.length - 1 - i];
-          //               Color c = const Color(0xFFD0D8FF);
-          //               if (log.contains('ERROR') ||
-          //                   log.contains('FAILED') ||
-          //                   log.contains('Exception')) {
-          //                 c = const Color(0xFFFF5757);
-          //               } else if (log.contains('✓') ||
-          //                   log.contains('COMPLETE')) {
-          //                 c = const Color(0xFF3DDA82);
-          //               } else if (log.contains('FFmpeg')) {
-          //                 c = const Color(0xFFF5C842);
-          //               } else if (log.contains('===')) {
-          //                 c = const Color(0xFF5A7AFF);
-          //               }
-          //               return Padding(
-          //                 padding:
-          //                 const EdgeInsets.symmetric(
-          //                     vertical: 2),
-          //                 child: Text(log,
-          //                     style: TextStyle(
-          //                         color: c,
-          //                         fontSize: 10,
-          //                         fontFamily: 'monospace')),
-          //               );
-          //             },
-          //           ),
-          //         ),
-          //         actions: [
-          //           ElevatedButton(
-          //             style: ElevatedButton.styleFrom(
-          //               backgroundColor: const Color(0xFF5A7AFF),
-          //               shape: RoundedRectangleBorder(
-          //                   borderRadius:
-          //                   BorderRadius.circular(8)),
-          //             ),
-          //             onPressed: () => Navigator.pop(ctx),
-          //             child: const Text('Close',
-          //                 style: TextStyle(color: Colors.white)),
-          //           ),
-          //         ],
-          //       ),
-          //     );
-          //   },
-          //   child: Container(
-          //     padding: const EdgeInsets.all(6),
-          //     margin: const EdgeInsets.only(right: 4),
-          //     child: Icon(Icons.bug_report,
-          //         color: AppTheme.subtext, size: 20),
-          //   ),
-          // ),
+          //Debug log button
+          GestureDetector(
+            onTap: () async {
+              final allLogs = await _DebugLog.getAll();
+              if (!mounted) return;
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: const Color(0xFF0A0E1A),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  title: Row(
+                    mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Debug Log',
+                          style: TextStyle(
+                              color: Color(0xFF5A7AFF),
+                              fontSize: 14)),
+                      TextButton(
+                        onPressed: () async {
+                          await _DebugLog.clear();
+                          Navigator.pop(ctx);
+                        },
+                        child: const Text('Clear',
+                            style: TextStyle(
+                                color: Color(0xFFFF5757),
+                                fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    height: 350,
+                    child: allLogs.isEmpty
+                        ? const Center(
+                        child: Text('No logs',
+                            style: TextStyle(
+                                color: Color(0xFF4A5A88))))
+                        : ListView.builder(
+                      reverse: true,
+                      itemCount: allLogs.length,
+                      itemBuilder: (_, i) {
+                        final log = allLogs[
+                        allLogs.length - 1 - i];
+                        Color c = const Color(0xFFD0D8FF);
+                        if (log.contains('ERROR') ||
+                            log.contains('FAILED') ||
+                            log.contains('Exception')) {
+                          c = const Color(0xFFFF5757);
+                        } else if (log.contains('✓') ||
+                            log.contains('COMPLETE')) {
+                          c = const Color(0xFF3DDA82);
+                        } else if (log.contains('FFmpeg')) {
+                          c = const Color(0xFFF5C842);
+                        } else if (log.contains('===')) {
+                          c = const Color(0xFF5A7AFF);
+                        }
+                        return Padding(
+                          padding:
+                          const EdgeInsets.symmetric(
+                              vertical: 2),
+                          child: Text(log,
+                              style: TextStyle(
+                                  color: c,
+                                  fontSize: 10,
+                                  fontFamily: 'monospace')),
+                        );
+                      },
+                    ),
+                  ),
+                  actions: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5A7AFF),
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                            BorderRadius.circular(8)),
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Close',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              margin: const EdgeInsets.only(right: 4),
+              child: Icon(Icons.bug_report,
+                  color: AppTheme.subtext, size: 20),
+            ),
+          ),
 
           // Settings
           GestureDetector(
@@ -3785,6 +3923,41 @@ class _DroneControllerState extends State<DroneController> {
       ),
     );
   }
+}
+
+// ── FLIP COUNTDOWN ────────────────────────────────────────────────────────────
+class _FlipCountdown extends StatefulWidget {
+  final int seconds;
+  final Color color;
+  const _FlipCountdown({super.key, required this.seconds, required this.color});
+  @override
+  State<_FlipCountdown> createState() => _FlipCountdownState();
+}
+
+class _FlipCountdownState extends State<_FlipCountdown> {
+  late int _remaining;
+  Timer? _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _remaining = widget.seconds;
+    _t = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) { t.cancel(); return; }
+      setState(() => _remaining--);
+      if (_remaining <= 0) t.cancel();
+    });
+  }
+
+  @override
+  void dispose() { _t?.cancel(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) => Text(
+    '${_remaining}s',
+    style: TextStyle(
+        color: widget.color, fontSize: 9, fontFamily: 'monospace'),
+  );
 }
 
 // ── JOYSTICK WIDGET ───────────────────────────────────────────────────────────
