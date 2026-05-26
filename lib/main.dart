@@ -1074,7 +1074,8 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    )
+      ..repeat(reverse: true);
     _pulseAnim = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(
           parent: _pulseController, curve: Curves.easeInOut),
@@ -1093,51 +1094,86 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
   }
 
   void _showInstructionsDialog() {
-    if (!mounted) return;
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.info_outline,
-                color: AppTheme.accent, size: 22),
-            const SizedBox(width: 8),
-            Text('Before calibrating',
-                style: TextStyle(
-                    color: AppTheme.accent,
-                    fontWeight: FontWeight.w500)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _BulletPoint('Place the drone on a flat, level surface'),
-            _BulletPoint(
-                'Make sure the drone is completely stationary'),
-            _BulletPoint('Drone must be paired but NOT armed'),
-            _BulletPoint(
-                'Do not touch the drone during calibration'),
-            _BulletPoint('Calibration takes 5 seconds to complete'),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+      builder: (_) =>
+          AlertDialog(
+            backgroundColor: AppTheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Got it',
-                style: TextStyle(color: Colors.white)),
+
+            content: SizedBox(
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width * 0.7,
+
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+
+                  // TITLE
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppTheme.accent,
+                        size: 18,
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      Text(
+                        'Before calibrating',
+                        style: TextStyle(
+                          color: AppTheme.accent,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // BULLETS
+                  _BulletPoint(
+                    'Place the drone on a flat, level surface',
+                  ),
+
+                  _BulletPoint(
+                    'Make sure the drone is completely stationary',
+                  ),
+
+                  _BulletPoint(
+                    'Drone must be paired but NOT armed',
+                  ),
+
+                  _BulletPoint(
+                    'Do not touch the drone during calibration',
+                  ),
+
+                  _BulletPoint(
+                    'Calibration takes 5 seconds to complete',
+                  ),
+                ],
+              ),
+            ),
+
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+
+                child: Text(
+                  'Got it',
+                  style: TextStyle(
+                    color: AppTheme.accent,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1198,61 +1234,71 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
       ));
     }
   }
+
   void _showSuccessDialog() {
     if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle,
-                color: Color(0xFF3DDA82), size: 24),
-            SizedBox(width: 10),
-            Text('Calibration complete',
-                style: TextStyle(color: Color(0xFF3DDA82))),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'The drone has been successfully level calibrated.',
-              style: TextStyle(color: AppTheme.text, fontSize: 13),
+      builder: (ctx) =>
+          AlertDialog(
+            backgroundColor: AppTheme.surface,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle,
+                    color: Color(0xFF3DDA82), size: 24),
+                SizedBox(width: 10),
+                Text('Calibration complete',
+                    style: TextStyle(color: Color(0xFF3DDA82))),
+              ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              'Your flight control settings remain unchanged.',
-              style:
-              TextStyle(color: AppTheme.subtext, fontSize: 12),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'The drone has been successfully level calibrated.',
+                  style: TextStyle(color: AppTheme.text, fontSize: 13),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Your flight control settings remain unchanged.',
+                  style:
+                  TextStyle(color: AppTheme.subtext, fontSize: 12),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3DDA82),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text('Done',
-                style: TextStyle(color: Colors.white)),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3DDA82),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: const Text('Done',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenH = MediaQuery
+        .of(context)
+        .size
+        .height;
+    final screenW = MediaQuery
+        .of(context)
+        .size
+        .width;
     return Scaffold(
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
@@ -1277,177 +1323,170 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Padding(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedBuilder(
-                animation: _pulseAnim,
-                builder: (_, __) => Transform.scale(
-                  scale: _isCalibrating ? _pulseAnim.value : 1.0,
-                  child: Container(
-                    width: 180,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _calibrated
-                            ? const Color(0xFF3DDA82)
-                            : _isCalibrating
-                            ? AppTheme.accent
-                            : AppTheme.border,
-                        width: _isCalibrating ? 3 : 2,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _calibrated
-                              ? Icons.check_circle_outline
-                              : _isCalibrating
-                              ? Icons.sync
-                              : Icons.explore_outlined,
-                          color: _calibrated
-                              ? const Color(0xFF3DDA82)
-                              : AppTheme.accent,
-                          size: 52,
-                        ),
-                        const SizedBox(height: 12),
-                        if (_isCalibrating) ...[
-                          Text(
-                            '$_calibrationSeconds / $_totalSeconds',
-                            style: TextStyle(
-                              color: AppTheme.accent,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
+      body: SafeArea(
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenW * 0.04,
+                vertical: screenH * 0.02,
+              ),
+
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+
+
+              GestureDetector(
+              onTap: _isCalibrating
+              ? null
+                  : _startCalibration,
+
+                child: AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, __) =>
+                        Transform.scale(
+                          scale: _isCalibrating
+                              ? _pulseAnim.value
+                              : 1.0,
+
+                          child: Container(
+                            width: screenW * 0.28,
+                            height: screenW * 0.28,
+
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface,
+                              shape: BoxShape.circle,
+
+                              border: Border.all(
+                                color: _calibrated
+                                    ? const Color(0xFF3DDA82)
+                                    : _isCalibrating
+                                    ? AppTheme.accent
+                                    : AppTheme.border,
+
+                                width: _isCalibrating ? 3 : 2,
+                              ),
+                            ),
+
+                            child: Column(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+
+                              children: [
+
+                                Icon(
+                                  _calibrated
+                                      ? Icons.check_circle_outline
+                                      : _isCalibrating
+                                      ? Icons.sync
+                                      : Icons.explore_outlined,
+
+                                  color: _calibrated
+                                      ? const Color(0xFF3DDA82)
+                                      : AppTheme.accent,
+
+                                  size: screenW * 0.05,
+                                ),
+
+                                SizedBox(
+                                  height: screenH * 0.008,
+                                ),
+
+                                if (_isCalibrating) ...[
+
+                                  Text(
+                                    '$_calibrationSeconds / $_totalSeconds',
+
+                                    style: TextStyle(
+                                      color: AppTheme.accent,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+
+                                  SizedBox(
+                                    height: screenH * 0.004,
+                                  ),
+
+                                  Text(
+                                    'Calibrating...',
+                                    style: TextStyle(
+                                      color: AppTheme.accentLight,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+
+                                ] else
+                                  if (_calibrated) ...[
+
+                                    const Text(
+                                      'Calibrated',
+
+                                      style: TextStyle(
+                                        color: Color(0xFF3DDA82),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+
+                                  ] else
+                                    ...[
+
+                                      Text(
+                                        'Ready',
+
+                                        style: TextStyle(
+                                          color: AppTheme.accentLight,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text('Calibrating...',
-                              style: TextStyle(
-                                  color: AppTheme.accentLight,
-                                  fontSize: 12)),
-                        ] else if (_calibrated) ...[
-                          const Text('Calibrated',
-                              style: TextStyle(
-                                  color: Color(0xFF3DDA82),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500)),
-                        ] else ...[
-                          Text('Ready',
-                              style: TextStyle(
-                                  color: AppTheme.accentLight,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500)),
-                        ],
-                      ],
-                    ),
+                        ),
                   ),
-                ),
               ),
 
-              const SizedBox(height: 32),
+                  SizedBox(height: screenH * 0.015),
 
-              if (_isCalibrating) ...[
-                SizedBox(
-                  width: 240,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: _calibrationSeconds / _totalSeconds,
-                      backgroundColor: AppTheme.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.accent),
-                      minHeight: 6,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Keep the drone still on a flat surface',
-                  style: TextStyle(
-                      color: AppTheme.subtext, fontSize: 12),
-                ),
-                const SizedBox(height: 32),
-              ] else
-                const SizedBox(height: 32),
-
-              SizedBox(
-                width: 240,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _calibrated
-                        ? const Color(0xFF0E2E1A)
-                        : _isCalibrating
-                        ? AppTheme.border
-                        : AppTheme.accent,
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: _calibrated
-                            ? const Color(0xFF3DDA82)
-                            : Colors.transparent,
+                  if (_isCalibrating) ...[
+                    SizedBox(
+                      width: screenW * 0.36,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: _calibrationSeconds / _totalSeconds,
+                          backgroundColor: AppTheme.border,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.accent),
+                          minHeight: 6,
+                        ),
                       ),
                     ),
-                  ),
-                  onPressed:
-                  _isCalibrating ? null : _startCalibration,
-                  child: Text(
-                    _calibrated
-                        ? 'Calibrate again'
-                        : _isCalibrating
-                        ? 'Calibrating...'
-                        : 'Start calibration',
-                    style: TextStyle(
-                      color: _calibrated
-                          ? const Color(0xFF3DDA82)
-                          : _isCalibrating
-                          ? AppTheme.subtext
-                          : Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                    SizedBox(height: screenH * 0.006),
+                    Text(
+                      'Keep the drone still on a flat surface',
+                      style: TextStyle(
+                          color: AppTheme.subtext, fontSize: 12),
                     ),
-                  ),
-                ),
+                    SizedBox(height: screenH * 0.01),
+                  ] else
+                    SizedBox(height: screenH * 0.01),
+                                  ],
               ),
-
-              const SizedBox(height: 16),
-
-              if (!_isCalibrating && !_calibrated)
-                GestureDetector(
-                  onTap: _showInstructionsDialog,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.help_outline,
-                          color: AppTheme.subtext, size: 14),
-                      const SizedBox(width: 4),
-                      Text('View instructions',
-                          style: TextStyle(
-                              color: AppTheme.subtext,
-                              fontSize: 12)),
-                    ],
-                  ),
-                ),
-
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
 class _BulletPoint extends StatelessWidget {
   final String text;
   const _BulletPoint(this.text);
@@ -2719,19 +2758,31 @@ class _DroneControllerState extends State<DroneController> {
                 horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
               color: _flip == 1
-                  ? const Color(0xFF38BDF8)
+                  ? const Color(0xFF11152A)
                   : AppTheme.isDark
                   ? const Color(0xFF11152A)
                   : const Color(0xFFE8EEFF),
+
               borderRadius: BorderRadius.circular(20),
+
               border: Border.all(
-                color: _flipDisabled
-                    ? AppTheme.border.withOpacity(0.3)
-                    : _flip == 1
-                    ? const Color(0xFFF59E0B)
+                color: _flip == 1
+                    ? const Color(0xFF38BDF8)
                     : AppTheme.border,
-                width: _flip == 1 ? 1.5 : 1,
+
+                width: _flip == 1 ? 2 : 1,
               ),
+
+              boxShadow: _flip == 1
+                  ? [
+                BoxShadow(
+                  color: const Color(0xFF38BDF8)
+                      .withOpacity(0.25),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ]
+                  : [],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -2739,20 +2790,16 @@ class _DroneControllerState extends State<DroneController> {
                 Icon(
                   Icons.flip_camera_android,
                   size: 13,
-                  color: _flipDisabled
-                      ? AppTheme.subtext.withOpacity(0.3)
-                      : _flip == 1
-                      ? const Color(0xFFF59E0B)
+                  color: _flip == 1
+                      ? const Color(0xFF38BDF8)
                       : AppTheme.subtext,
                 ),
                 const SizedBox(width: 5),
                 Text(
                   'FLIP',
                   style: TextStyle(
-                    color: _flipDisabled
-                        ? AppTheme.subtext.withOpacity(0.3)
-                        : _flip == 1
-                        ? const Color(0xFFF59E0B)
+                    color: _flip == 1
+                        ? const Color(0xFF38BDF8)
                         : AppTheme.subtext,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -3451,7 +3498,8 @@ class _DroneControllerState extends State<DroneController> {
 
                         if (!cameraEnabled)
                           Positioned(
-                            top: 0, bottom: 0,
+                            top: 0,
+                            bottom: size.height * 0.12,
                             left: size.width * 0.34,
                             right: size.width * 0.34,
                             child: Column(
@@ -3460,27 +3508,45 @@ class _DroneControllerState extends State<DroneController> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    _telemetryBox('ROLL',
-                                        '${rollDeg.toStringAsFixed(1)}°'),
-                                    _telemetryBox('PITCH',
-                                        '${pitchDeg.toStringAsFixed(1)}°'),
+                                    _telemetryBox(
+                                      'ROLL',
+                                      '${rollDeg.toStringAsFixed(1)}°',
+                                    ),
+                                    _telemetryBox(
+                                      'PITCH',
+                                      '${pitchDeg.toStringAsFixed(1)}°',
+                                    ),
                                   ],
                                 ),
+
                                 const SizedBox(height: 6),
+
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    _telemetryBox('THR', '$thrPct%', highlight: true),
-                                    _telemetryBox('YAW',
-                                        '${yawDeg.toStringAsFixed(1)}°'),
+                                    _telemetryBox(
+                                      'THR',
+                                      '$thrPct%',
+                                      highlight: true,
+                                    ),
+                                    _telemetryBox(
+                                      'YAW',
+                                      '${yawDeg.toStringAsFixed(1)}°',
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: 48),
-                                // ── Headless + Flip buttons ──
-                                _buildFlightButtons(),
                               ],
                             ),
                           ),
+
+                        Positioned(
+                          bottom: 70,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: _buildFlightButtons(),
+                          ),
+                        ),
 
                         if (isRecording)
                           Positioned(
@@ -3731,14 +3797,12 @@ class _DroneControllerState extends State<DroneController> {
                 decoration: BoxDecoration(
                   color: cameraEnabled
                       ? const Color(0xFF0E2E1A)
-                      : AppTheme.isDark
-                      ? const Color(0xFF1A2040)
-                      : const Color(0xFFE8EEFF),
+                      : const Color(0xFF3A1010),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: cameraEnabled
                         ? const Color(0xFF3DDA82)
-                        : AppTheme.border,
+                        : const Color(0xFFFF5757),
                   ),
                 ),
                 child: Row(
@@ -3750,7 +3814,7 @@ class _DroneControllerState extends State<DroneController> {
                           : Icons.videocam_off,
                       color: cameraEnabled
                           ? const Color(0xFF3DDA82)
-                          : AppTheme.subtext,
+                          : const Color(0xFFFF5757),
                       size: 18,
                     ),
                     const SizedBox(width: 6),
@@ -3759,7 +3823,7 @@ class _DroneControllerState extends State<DroneController> {
                       style: TextStyle(
                         color: cameraEnabled
                             ? const Color(0xFF3DDA82)
-                            : AppTheme.subtext,
+                            : const Color(0xFFFF5757),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
