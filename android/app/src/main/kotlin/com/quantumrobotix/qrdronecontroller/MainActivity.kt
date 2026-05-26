@@ -22,7 +22,7 @@ class MainActivity : FlutterActivity() {
     private var frameCount = 0
     private var outputPath: String? = null
     private var isRecording = false
-    private val FRAME_RATE = 10
+    private val FRAME_RATE = 15
     private val BIT_RATE = 1_000_000
     private var videoWidth = 640
     private var videoHeight = 480

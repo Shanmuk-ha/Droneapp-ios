@@ -10,7 +10,7 @@ import 'dart:ui' show instantiateImageCodec;
 
 // ── THEME SYSTEM ──────────────────────────────────────────────────────────────
 class AppTheme {
-  static bool isDark = true;
+  static bool isDark = false;
 
   static const Color darkBg          = Color(0xFF1A1E2E);
   static const Color darkSurface     = Color(0xFF11152A);
@@ -60,7 +60,7 @@ class DroneApp extends StatefulWidget {
 }
 
 class _DroneAppState extends State<DroneApp> {
-  bool _isDark = true;
+  bool _isDark = false;
 
   void toggleTheme() {
     setState(() {
@@ -75,7 +75,7 @@ class _DroneAppState extends State<DroneApp> {
   void initState() {
     super.initState();
     SharedPreferences.getInstance().then((p) {
-      final saved = p.getBool('isDark') ?? true;
+      final saved = p.getBool('isDark') ?? false;
       if (saved != _isDark) {
         setState(() {
           _isDark = saved;
@@ -2642,8 +2642,8 @@ class _DroneControllerState extends State<DroneController> {
       _flipDisabled = true;
     });
     sendData();
-    // Reset flip back to 0 after 200ms
-    Future.delayed(const Duration(milliseconds: 200), () {
+    // Reset flip back to 0 after 800ms
+    Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
       setState(() => _flip = 0);
       sendData();
@@ -3048,10 +3048,10 @@ class _DroneControllerState extends State<DroneController> {
         if (!mounted) return;
         setState(() => currentFrame = frameData);
 
-        // Send to native encoder — every 3rd frame = 10fps
+        // Send to native encoder — every 2nd frame = 15fps
         if (isRecording && !_isSaving) {
           _framesSent++;
-          if (_framesSent % 3 != 0) return;
+          if (_framesSent % 2 != 0) return;
           // Fire and forget — don't await
           _videoChannel.invokeMethod('addFrame', {
             'bytes': Uint8List.fromList(frameData),
@@ -4111,13 +4111,10 @@ class _JoystickPainter extends CustomPainter {
               : const Color(0xFFEEF0FA)));
     canvas.drawCircle(center, outerRadius,
         Paint()
-          ..color = transparent
-              ? const Color(0x443A60AA)
-              : (isDark
-              ? const Color(0xFF2E3A60)
-              : const Color(0xFFBBC5E8))
+          ..color = AppTheme.accent
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2);
+          ..strokeWidth = 2,
+    );
 
     final crossPaint = Paint()
       ..color = transparent
@@ -4235,3 +4232,6 @@ class _DebugLog {
 
   static List<String> get logs => List.from(_memLogs);
 }
+
+
+// 4114 - colour
