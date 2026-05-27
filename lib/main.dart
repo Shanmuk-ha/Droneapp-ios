@@ -161,12 +161,61 @@ class _SplashScreenState extends State<SplashScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedBuilder(
-              animation: _logoController,
-              builder: (_, __) => CustomPaint(
-                size: const Size(560, 100),
-                painter: _LogoPainter(progress: _logoController.value),
-              ),
+            // Animated logo
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+
+                // QUANTUM (STATIC)
+                const Text(
+                  'QUANTUM',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 3,
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                // ONLY LOGO ANIMATES
+                AnimatedBuilder(
+                  animation: _logoController,
+
+                  builder: (_, __) {
+
+                    return Transform.scale(
+                      scale: 0.85 + (_logoController.value * 0.15),
+
+                     child: ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.modulate,
+                        ),
+
+                        child: Image.asset(
+                          'assets/Logo.png',
+                          width: 120,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(width: 4),
+
+                // ROBOTIX (STATIC)
+                const Text(
+                  'ROBOTIX',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 3,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 32),
             AnimatedBuilder(
@@ -2521,7 +2570,7 @@ class _DroneControllerState extends State<DroneController> {
   double get yawDeg   => (yaw   / 254.0) * 180.0 - 90.0;
   int    get thrPct   => (throttle / 254.0 * 100).round();
 
-  double p = 0.56, i = 0.001, d = 0.056, a = 35.0, rT = 0.8, pT = 0.9;
+  double p = 0.42, i = 0.001, d = 0.036, a = 15.0, rT = 0.0, pT = 0.0;
 
   bool isPaired        = false;
   bool isArmed         = false;
