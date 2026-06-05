@@ -139,9 +139,9 @@ class _SplashScreenState extends State<SplashScreen>
     _barProgress = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _barController, curve: Curves.easeInOut),
     );
-    Future.delayed(const Duration(milliseconds: 2800),
+    Future.delayed(const Duration(milliseconds: 1400),
             () { if (mounted) _barController.forward(); });
-    Future.delayed(const Duration(milliseconds: 4800),
+    Future.delayed(const Duration(milliseconds: 4000),
             () { if (mounted) Navigator.pushReplacementNamed(context, '/home'); });
   }
 
@@ -221,7 +221,7 @@ class _SplashScreenState extends State<SplashScreen>
             AnimatedBuilder(
               animation: _barController,
               builder: (_, __) => Opacity(
-                opacity: _barController.value > 0 ? 1.0 : 0.0,
+                opacity: 1.0,
                 child: Column(
                   children: [
                     ClipRRect(
@@ -1817,7 +1817,7 @@ class FlightControlSettingsPage extends StatefulWidget {
 
 class _FlightControlSettingsPageState
     extends State<FlightControlSettingsPage> {
-  double p = 0.56, i = 0.001, d = 0.056, a = 35.0, rT = 0.0, pT = 0.0;
+  double p = 0.42, i = 0.001, d = 0.036, a = 15.0, rT = 0.0, pT = 0.0;
   // ↑ Roll and Pitch trim default changed to 0.0
 
   final Map<String, List<double>> _bipolarRanges = {
@@ -1836,10 +1836,10 @@ class _FlightControlSettingsPageState
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       setState(() {
-        p  = prefs.getDouble('P')  ?? 0.56;
+        p  = prefs.getDouble('P')  ?? 0.42;
         i  = prefs.getDouble('I')  ?? 0.001;
-        d  = prefs.getDouble('D')  ?? 0.056;
-        a  = prefs.getDouble('A')  ?? 35.0;
+        d  = prefs.getDouble('D')  ?? 0.036;
+        a  = prefs.getDouble('A')  ?? 15.0;
         rT = prefs.getDouble('RT') ?? 0.0;  // ← default 0
         pT = prefs.getDouble('PT') ?? 0.0;  // ← default 0
       });
@@ -2278,7 +2278,7 @@ class _FlightControlSettingsPageState
                   title: Text('Reset to defaults?',
                       style: TextStyle(color: AppTheme.text)),
                   content: Text(
-                    'P=0.56  I=0.001  D=0.056  A=35\nR=0  Pt=0',
+                    'P=0.42  I=0.001  D=0.036  A=15\nR=0  Pt=0',
                     style: TextStyle(
                         color: AppTheme.subtext,
                         fontSize: 13,
@@ -2300,8 +2300,8 @@ class _FlightControlSettingsPageState
                       ),
                       onPressed: () {
                         setState(() {
-                          p = 0.56; i = 0.001; d = 0.056;
-                          a = 35.0; rT = 0.0;  pT = 0.0;
+                          p = 0.42; i = 0.001; d = 0.036;
+                          a = 15.0; rT = 0.0;  pT = 0.0;
                           _bipolarRanges['R']  = [-2.0, 2.0];
                           _bipolarRanges['Pt'] = [-2.0, 2.0];
                         });
@@ -2725,11 +2725,13 @@ class _DroneControllerState extends State<DroneController> {
 
   void _triggerFlip() {
     if (_flipDisabled) return;
+
     setState(() {
       _flip = 1;
       _flipDisabled = true;
     });
     sendData();
+
     // Reset flip back to 0 after 800ms
     Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
