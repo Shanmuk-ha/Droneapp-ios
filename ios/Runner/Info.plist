@@ -51,5 +51,14 @@
 
     <key>CFBundleName</key>
     <string>QR Drone Controller</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>QR Drone Controller</string>
+
+    <key>CFBundleName</key>
+    <string>QR Drone Controller</string>
 </dict>
 </plist>
