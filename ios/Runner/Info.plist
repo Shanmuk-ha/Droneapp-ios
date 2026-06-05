@@ -1,70 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
 <plist version="1.0">
 <dict>
-    <!-- Existing entries stay -->
 
-    <!-- WiFi / Network -->
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>QR Drone Controller connects to your drone over local Wi-Fi to send flight controls and receive camera feed.</string>
+```
+<key>CFBundleDevelopmentRegion</key>
+<string>$(DEVELOPMENT_LANGUAGE)</string>
 
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_drone._udp</string>
-    </array>
+<key>CFBundleDisplayName</key>
+<string>QR Drone Controller</string>
 
-    <!-- Camera feed display -->
-    <key>NSCameraUsageDescription</key>
-    <string>QR Drone Controller displays the live camera feed from your drone.</string>
+<key>CFBundleExecutable</key>
+<string>$(EXECUTABLE_NAME)</string>
 
-    <!-- Photo library for saving videos -->
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>QR Drone Controller saves recorded flight videos to your photo library.</string>
+<key>CFBundleIdentifier</key>
+<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>QR Drone Controller saves recorded flight videos to your photo library.</string>
+<key>CFBundleInfoDictionaryVersion</key>
+<string>6.0</string>
 
-    <!-- Landscape orientation -->
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
+<key>CFBundleName</key>
+<string>QR Drone Controller</string>
 
-    <key>UISupportedInterfaceOrientations~ipad</key>
-    <array>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
+<key>CFBundlePackageType</key>
+<string>APPL</string>
 
-    <!-- Disable ATS for local network (drone IP) -->
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsLocalNetworking</key>
-        <true/>
-    </dict>
+<key>CFBundleShortVersionString</key>
+<string>$(FLUTTER_BUILD_NAME)</string>
 
-    <!-- App display name -->
-    <key>CFBundleDisplayName</key>
-    <string>QR Drone Controller</string>
+<key>CFBundleVersion</key>
+<string>$(FLUTTER_BUILD_NUMBER)</string>
 
-    <key>CFBundleName</key>
-    <string>QR Drone Controller</string>
+<key>LSRequiresIPhoneOS</key>
+<true/>
 
-    <key>CFBundleIdentifier</key>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+<key>NSLocalNetworkUsageDescription</key>
+<string>QR Drone Controller connects to your drone over local Wi-Fi to send flight controls and receive camera feed.</string>
 
-    <key>CFBundleShortVersionString</key>
-    <string>$(FLUTTER_BUILD_NAME)</string>
+<key>NSBonjourServices</key>
+<array>
+    <string>_drone._udp</string>
+</array>
 
-    <key>CFBundleVersion</key>
-    <string>$(FLUTTER_BUILD_NUMBER)</string>
+<key>NSCameraUsageDescription</key>
+<string>QR Drone Controller displays the live camera feed from your drone.</string>
 
-    <key>CFBundleDisplayName</key>
-    <string>QR Drone Controller</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>QR Drone Controller saves recorded flight videos to your photo library.</string>
 
-    <key>CFBundleName</key>
-    <string>QR Drone Controller</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>QR Drone Controller saves recorded flight videos to your photo library.</string>
+
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
+</dict>
+
+<key>UIRequiresFullScreen</key>
+<true/>
+
+<key>UISupportedInterfaceOrientations</key>
+<array>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+</array>
+
+<key>UISupportedInterfaceOrientations~ipad</key>
+<array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+</array>
+```
+
 </dict>
 </plist>
