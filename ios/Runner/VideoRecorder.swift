@@ -124,27 +124,52 @@ class VideoRecorder: NSObject {
 
     private func saveToPhotoLibrary(
         url: URL,
-        completion: @escaping (String?) -> Void) {
+        completion: @escaping (String?) -> Void
+    ) {
 
-        PHPhotoLibrary.requestAuthorization(
-            for: .addOnly) { status in
-            guard status == .authorized ||
-                  status == .limited else {
-                completion(nil)
-                return
+        if #available(iOS 14.0, *) {
+
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+
+                guard status == .authorized ||
+                      status == .limited else {
+                    completion(nil)
+                    return
+                }
+
+                PHPhotoLibrary.shared().performChanges({
+                    let req = PHAssetCreationRequest.forAsset()
+                    req.addResource(
+                        with: .video,
+                        fileURL: url,
+                        options: nil
+                    )
+                }) { success, error in
+                    try? FileManager.default.removeItem(at: url)
+                    completion(success ? url.path : nil)
+                }
             }
-            PHPhotoLibrary.shared().performChanges({
-                let req = PHAssetCreationRequest
-                    .forAsset()
-                req.addResource(
-                    with: .video,
-                    fileURL: url,
-                    options: nil)
-            }) { success, error in
-                try? FileManager.default
-                    .removeItem(at: url)
-                completion(success ? url.path : nil)
+
+        } else {
+
+            PHPhotoLibrary.requestAuthorization { status in
+
+                guard status == .authorized else {
+                    completion(nil)
+                    return
+                }
+
+                PHPhotoLibrary.shared().performChanges({
+                    let req = PHAssetCreationRequest.forAsset()
+                    req.addResource(
+                        with: .video,
+                        fileURL: url,
+                        options: nil
+                    )
+                }) { success, error in
+                    try? FileManager.default.removeItem(at: url)
+                    completion(success ? url.path : nil)
+                }
             }
         }
     }
-}
