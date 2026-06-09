@@ -3,7 +3,7 @@ import Flutter
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
-    private let recorder = VideoRecorder()
+    private var recorder: VideoRecorder?
 
     override func application(
         _ application: UIApplication,
@@ -27,8 +27,14 @@ import Flutter
                 let w = args?["width"] as? Int ?? 640
                 let h = args?["height"] as? Int ?? 480
                 do {
-                    try self.recorder.startRecording(
-                        width: w, height: h)
+                    if self.recorder == nil {
+                        self.recorder = VideoRecorder()
+                    }
+
+                    try self.recorder!.startRecording(
+                        width: w,
+                        height: h
+                    )
                     result(true)
                 } catch {
                     result(FlutterError(
@@ -40,13 +46,13 @@ import Flutter
             case "addFrame":
                 let args = call.arguments as? [String: Any]
                 if let bytes = args?["bytes"] as? FlutterStandardTypedData {
-                    self.recorder.addFrame(
+                    self.recorder?.addFrame(
                         jpegData: bytes.data)
                 }
                 result(true)
 
             case "stopRecording":
-                self.recorder.stopRecording { path in
+                self.recorder?.stopRecording { path in
                     result(path)
                 }
 
