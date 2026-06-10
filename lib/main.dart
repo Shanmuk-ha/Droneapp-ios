@@ -40,14 +40,8 @@ class AppTheme {
   static Color get accentLight => isDark ? darkAccentLight : lightAccentLight;
 }
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
-
   runApp(const DroneApp());
 }
 
