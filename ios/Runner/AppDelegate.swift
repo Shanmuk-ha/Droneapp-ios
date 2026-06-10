@@ -12,8 +12,12 @@ import Flutter
     ) -> Bool {
         GeneratedPluginRegistrant.register(with: self)
 
-        let controller = window?.rootViewController
-            as! FlutterViewController
+        guard let controller = window?.rootViewController as? FlutterViewController else {
+            return super.application(
+                application,
+                didFinishLaunchingWithOptions: launchOptions
+            )
+        }
         let channel = FlutterMethodChannel(
             name: "com.quantumrobotix/video",
             binaryMessenger: controller.binaryMessenger)
