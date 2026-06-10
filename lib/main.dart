@@ -4288,19 +4288,6 @@ class _DebugLog {
 
   static Future<void> init() async {
     try {
-      const dir =
-          '/data/data/com.quantumrobotix.qrdronecontroller/cache';
-      await Directory(dir).create(recursive: true);
-      _logPath = '$dir/drone_debug.log';
-      final f = File(_logPath!);
-      if (await f.exists()) {
-        final lines = await f.readAsLines();
-        if (lines.length > 200) {
-          await f.writeAsString(
-              lines.skip(lines.length - 200).join('\n') + '\n');
-        }
-        _memLogs.addAll(lines.takeLast(50));
-      }
       add('=== APP STARTED ===');
     } catch (e) {
       debugPrint('Log init failed: $e');
