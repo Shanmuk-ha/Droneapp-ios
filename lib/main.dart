@@ -10,7 +10,34 @@ import 'dart:ui' show instantiateImageCodec;
 
 // ── THEME SYSTEM ──────────────────────────────────────────────────────────────
 class AppTheme {
-  ...
+  static bool isDark = false;
+
+  static const Color darkBg          = Color(0xFF1A1E2E);
+  static const Color darkSurface     = Color(0xFF11152A);
+  static const Color darkCard        = Color(0xFF11152A);
+  static const Color darkBorder      = Color(0xFF1E2840);
+  static const Color darkText        = Color(0xFFD0D8FF);
+  static const Color darkSubtext     = Color(0xFF4A5A88);
+  static const Color darkAccent      = Color(0xFF5A7AFF);
+  static const Color darkAccentLight = Color(0xFF7EB3FF);
+
+  static const Color lightBg          = Color(0xFFF0F2FA);
+  static const Color lightSurface     = Color(0xFFFFFFFF);
+  static const Color lightCard        = Color(0xFFFFFFFF);
+  static const Color lightBorder      = Color(0xFFDDE3F5);
+  static const Color lightText        = Color(0xFF1A1E3A);
+  static const Color lightSubtext     = Color(0xFF6B7BAD);
+  static const Color lightAccent      = Color(0xFF4060FF);
+  static const Color lightAccentLight = Color(0xFF5A7AFF);
+
+  static Color get bg          => isDark ? darkBg          : lightBg;
+  static Color get surface     => isDark ? darkSurface     : lightSurface;
+  static Color get card        => isDark ? darkCard        : lightCard;
+  static Color get border      => isDark ? darkBorder      : lightBorder;
+  static Color get text        => isDark ? darkText        : lightText;
+  static Color get subtext     => isDark ? darkSubtext     : lightSubtext;
+  static Color get accent      => isDark ? darkAccent      : lightAccent;
+  static Color get accentLight => isDark ? darkAccentLight : lightAccentLight;
 }
 
 void main() {
@@ -28,6 +55,226 @@ void main() {
     ),
   );
 }
+
+// ── DRONE APP ─────────────────────────────────────────────────────────────────
+class DroneApp extends StatefulWidget {
+  const DroneApp({super.key});
+  static _DroneAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_DroneAppState>();
+  @override
+  State<DroneApp> createState() => _DroneAppState();
+}
+
+class _DroneAppState extends State<DroneApp> {
+  bool _isDark = false;
+
+  void toggleTheme() {
+    setState(() {
+      _isDark = !_isDark;
+      AppTheme.isDark = _isDark;
+    });
+    SharedPreferences.getInstance()
+        .then((p) => p.setBool('isDark', _isDark));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((p) {
+      final saved = p.getBool('isDark') ?? false;
+      if (saved != _isDark) {
+        setState(() {
+          _isDark = saved;
+          AppTheme.isDark = saved;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        scaffoldBackgroundColor: AppTheme.bg,
+        colorScheme: ColorScheme(
+          brightness: _isDark ? Brightness.dark : Brightness.light,
+          primary: AppTheme.accent,
+          onPrimary: Colors.white,
+          secondary: AppTheme.accent,
+          onSecondary: Colors.white,
+          error: const Color(0xFFFF5757),
+          onError: Colors.white,
+          surface: AppTheme.surface,
+          onSurface: AppTheme.text,
+        ),
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (ctx) => const SplashScreen(),
+        '/home': (ctx) => const DroneController(),
+      },
+    );
+  }
+}
+
+// ── SPLASH SCREEN ─────────────────────────────────────────────────────────────
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _logoController;
+  late AnimationController _barController;
+  late Animation<double> _barProgress;
+
+  @override
+  void initState() {
+    super.initState();
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..forward();
+    _barController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+    _barProgress = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _barController, curve: Curves.easeInOut),
+    );
+    Future.delayed(const Duration(milliseconds: 1400),
+            () { if (mounted) _barController.forward(); });
+    Future.delayed(const Duration(milliseconds: 4000),
+            () { if (mounted) Navigator.pushReplacementNamed(context, '/home'); });
+  }
+
+  @override
+  void dispose() {
+    _logoController.dispose();
+    _barController.dispose();
+    super.dispose();
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF111520),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Animated logo
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+
+                // QUANTUM (STATIC)
+                const Text(
+                  'QUANTUM',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 3,
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                // ONLY LOGO ANIMATES
+                AnimatedBuilder(
+                  animation: _logoController,
+
+                  builder: (_, __) {
+
+                    return Transform.scale(
+                      scale: 0.85 + (_logoController.value * 0.15),
+
+                      child: ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.modulate,
+                        ),
+
+                        child: Image.asset(
+                          'assets/Logo.png',
+                          width: 120,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(width: 4),
+
+                // ROBOTIX (STATIC)
+                const Text(
+                  'ROBOTIX',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 3,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            AnimatedBuilder(
+              animation: _barController,
+              builder: (_, __) => Opacity(
+                opacity: 1.0,
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: SizedBox(
+                        width: 160,
+                        height: 2,
+                        child: Stack(children: [
+                          Container(color: const Color(0xFF1E2840)),
+                          FractionallySizedBox(
+                            widthFactor: _barProgress.value,
+                            child: Container(
+                                color: const Color(0xFF5A7AFF)),
+                          ),
+                        ]),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(3, (i) {
+                        final phase = (_barController.value * 3 - i)
+                            .clamp(0.0, 1.0);
+                        return Container(
+                          margin:
+                          const EdgeInsets.symmetric(horizontal: 3),
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF5A7AFF)
+                                .withOpacity(0.3 + 0.7 * phase),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── LOGO PAINTER ──────────────────────────────────────────────────────────────
 class _LogoPainter extends CustomPainter {
   final double progress;
@@ -606,8 +853,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => LevelCalibrationPage(
-                        isPaired: widget.isPaired,
-                        mainSocket: widget.droneSocket,),
+                      isPaired: widget.isPaired,
+                      mainSocket: widget.droneSocket,),
                   ),
                 );
               }
@@ -1147,119 +1394,119 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
                 children: [
 
 
-              GestureDetector(
-              onTap: _isCalibrating
-              ? null
-                  : _startCalibration,
+                  GestureDetector(
+                    onTap: _isCalibrating
+                        ? null
+                        : _startCalibration,
 
-                child: AnimatedBuilder(
-                    animation: _pulseAnim,
-                    builder: (_, __) =>
-                        Transform.scale(
-                          scale: _isCalibrating
-                              ? _pulseAnim.value
-                              : 1.0,
+                    child: AnimatedBuilder(
+                      animation: _pulseAnim,
+                      builder: (_, __) =>
+                          Transform.scale(
+                            scale: _isCalibrating
+                                ? _pulseAnim.value
+                                : 1.0,
 
-                          child: Container(
-                            width: screenW * 0.28,
-                            height: screenW * 0.28,
+                            child: Container(
+                              width: screenW * 0.28,
+                              height: screenW * 0.28,
 
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              shape: BoxShape.circle,
+                              decoration: BoxDecoration(
+                                color: AppTheme.surface,
+                                shape: BoxShape.circle,
 
-                              border: Border.all(
-                                color: _calibrated
-                                    ? const Color(0xFF3DDA82)
-                                    : _isCalibrating
-                                    ? AppTheme.accent
-                                    : AppTheme.border,
-
-                                width: _isCalibrating ? 3 : 2,
-                              ),
-                            ),
-
-                            child: Column(
-                              mainAxisAlignment:
-                              MainAxisAlignment.center,
-
-                              children: [
-
-                                Icon(
-                                  _calibrated
-                                      ? Icons.check_circle_outline
-                                      : _isCalibrating
-                                      ? Icons.sync
-                                      : Icons.explore_outlined,
-
+                                border: Border.all(
                                   color: _calibrated
                                       ? const Color(0xFF3DDA82)
-                                      : AppTheme.accent,
+                                      : _isCalibrating
+                                      ? AppTheme.accent
+                                      : AppTheme.border,
 
-                                  size: screenW * 0.05,
+                                  width: _isCalibrating ? 3 : 2,
                                 ),
+                              ),
 
-                                SizedBox(
-                                  height: screenH * 0.008,
-                                ),
+                              child: Column(
+                                mainAxisAlignment:
+                                MainAxisAlignment.center,
 
-                                if (_isCalibrating) ...[
+                                children: [
 
-                                  Text(
-                                    '$_calibrationSeconds / $_totalSeconds',
+                                  Icon(
+                                    _calibrated
+                                        ? Icons.check_circle_outline
+                                        : _isCalibrating
+                                        ? Icons.sync
+                                        : Icons.explore_outlined,
 
-                                    style: TextStyle(
-                                      color: AppTheme.accent,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'monospace',
-                                    ),
+                                    color: _calibrated
+                                        ? const Color(0xFF3DDA82)
+                                        : AppTheme.accent,
+
+                                    size: screenW * 0.05,
                                   ),
 
                                   SizedBox(
-                                    height: screenH * 0.004,
+                                    height: screenH * 0.008,
                                   ),
 
-                                  Text(
-                                    'Calibrating...',
-                                    style: TextStyle(
-                                      color: AppTheme.accentLight,
-                                      fontSize: 12,
-                                    ),
-                                  ),
+                                  if (_isCalibrating) ...[
 
-                                ] else
-                                  if (_calibrated) ...[
-
-                                    const Text(
-                                      'Calibrated',
+                                    Text(
+                                      '$_calibrationSeconds / $_totalSeconds',
 
                                       style: TextStyle(
-                                        color: Color(0xFF3DDA82),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.accent,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'monospace',
+                                      ),
+                                    ),
+
+                                    SizedBox(
+                                      height: screenH * 0.004,
+                                    ),
+
+                                    Text(
+                                      'Calibrating...',
+                                      style: TextStyle(
+                                        color: AppTheme.accentLight,
+                                        fontSize: 12,
                                       ),
                                     ),
 
                                   ] else
-                                    ...[
+                                    if (_calibrated) ...[
 
-                                      Text(
-                                        'Ready',
+                                      const Text(
+                                        'Calibrated',
 
                                         style: TextStyle(
-                                          color: AppTheme.accentLight,
+                                          color: Color(0xFF3DDA82),
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                    ],
-                              ],
+
+                                    ] else
+                                      ...[
+
+                                        Text(
+                                          'Ready',
+
+                                          style: TextStyle(
+                                            color: AppTheme.accentLight,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                    ),
                   ),
-              ),
 
                   SizedBox(height: screenH * 0.015),
 
@@ -1286,7 +1533,7 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
                     SizedBox(height: screenH * 0.01),
                   ] else
                     SizedBox(height: screenH * 0.01),
-                                  ],
+                ],
               ),
             ),
           ),
@@ -3167,12 +3414,248 @@ class _DroneControllerState extends State<DroneController> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'DroneController Loaded',
-          style: TextStyle(fontSize: 24),
-        ),
+    final size   = MediaQuery.of(context).size;
+    final outerR = size.height * 0.36;
+    final innerR = size.height * 0.12;
+    final maxR   = outerR - innerR;
+
+    return Scaffold(
+      backgroundColor: AppTheme.bg,
+      body: Stack(
+        children: [
+          // ── Main content ──
+          Stack(
+            children: [
+              if (cameraEnabled && currentFrame != null)
+                Positioned.fill(
+                  child: Image.memory(currentFrame!,
+                      fit: BoxFit.cover, gaplessPlayback: true),
+                )
+              else if (cameraEnabled &&
+                  cameraConnected &&
+                  currentFrame == null)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(
+                              color: AppTheme.accent),
+                          const SizedBox(height: 12),
+                          Text('Waiting for feed...',
+                              style: TextStyle(
+                                  color: AppTheme.accent,
+                                  fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else if (cameraEnabled && !cameraConnected)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black,
+                      child: const Center(
+                        child: Text('Camera not available',
+                            style: TextStyle(
+                                color: Color(0xFFFF5757),
+                                fontSize: 14)),
+                      ),
+                    ),
+                  ),
+
+              if (cameraEnabled)
+                Positioned.fill(
+                  child: Container(
+                      color: Colors.black.withOpacity(0.25)),
+                ),
+
+              Column(
+                children: [
+                  _buildTopBar(context),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: size.width * 0.04,
+                          top: size.height * 0.48 - outerR - 30,
+                          child: JoystickWidget(
+                            key: _leftJoystickKey,
+                            outerRadius: outerR,
+                            innerRadius: innerR,
+                            initialOffset: Offset(0, maxR),
+                            transparent: cameraEnabled,
+                            onMove: (offset) {
+                              setState(() {
+                                yaw = (((offset.dx / maxR) + 1) /
+                                    2 *
+                                    254)
+                                    .clamp(0, 254)
+                                    .toInt();
+                                throttle =
+                                    (((-offset.dy / maxR) + 1) /
+                                        2 *
+                                        254)
+                                        .clamp(0, 254)
+                                        .toInt();
+                                if (yaw > 114 && yaw < 140)
+                                  yaw = 127;
+                              });
+                              sendData();
+                            },
+                            onRelease: () {
+                              setState(() => yaw = 127);
+                              sendData();
+                            },
+                            resetX: true,
+                            resetY: false,
+                          ),
+                        ),
+
+                        Positioned(
+                          right: size.width * 0.04,
+                          top: size.height * 0.48 - outerR - 30,
+                          child: JoystickWidget(
+                            outerRadius: outerR,
+                            innerRadius: innerR,
+                            transparent: cameraEnabled,
+                            onMove: (offset) {
+                              setState(() {
+                                roll = (((offset.dx / maxR) + 1) /
+                                    2 *
+                                    254)
+                                    .clamp(0, 254)
+                                    .toInt();
+                                pitch =
+                                    (((-offset.dy / maxR) + 1) /
+                                        2 *
+                                        254)
+                                        .clamp(0, 254)
+                                        .toInt();
+                                if (roll  > 120 && roll  < 134)
+                                  roll  = 127;
+                                if (pitch > 120 && pitch < 134)
+                                  pitch = 127;
+                              });
+                              sendData();
+                            },
+                            onRelease: () {
+                              setState(() {
+                                roll = 127;
+                                pitch = 127;
+                              });
+                              sendData();
+                            },
+                            resetX: true,
+                            resetY: true,
+                          ),
+                        ),
+
+                        if (!cameraEnabled)
+                          Positioned(
+                            top: 0,
+                            bottom: size.height * 0.12,
+                            left: size.width * 0.34,
+                            right: size.width * 0.34,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _telemetryBox(
+                                      'ROLL',
+                                      '${rollDeg.toStringAsFixed(1)}°',
+                                    ),
+                                    _telemetryBox(
+                                      'PITCH',
+                                      '${pitchDeg.toStringAsFixed(1)}°',
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _telemetryBox(
+                                      'THR',
+                                      '$thrPct%',
+                                      highlight: true,
+                                    ),
+                                    _telemetryBox(
+                                      'YAW',
+                                      '${yawDeg.toStringAsFixed(1)}°',
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        Positioned(
+                          bottom: 70,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: _buildFlightButtons(),
+                          ),
+                        ),
+
+                        if (isRecording)
+                          Positioned(
+                            top: 8, left: 0, right: 0,
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color:
+                                  Colors.red.withOpacity(0.85),
+                                  borderRadius:
+                                  BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.circle,
+                                        color: Colors.white,
+                                        size: 10),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'REC  ${_formatTime(_recordSeconds)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Tutorial overlay ──
+          if (_showTutorial)
+            TutorialOverlay(
+              onDone: () {
+                setState(() => _showTutorial = false);
+                _markTutorialSeen();
+              },
+            ),
+        ],
       ),
     );
   }
@@ -3748,10 +4231,10 @@ class _JoystickPainter extends CustomPainter {
               ? const Color(0xFF11152A)
               : const Color(0xFFEEF0FA)));
     canvas.drawCircle(center, outerRadius,
-        Paint()
-          ..color = AppTheme.accent
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
+      Paint()
+        ..color = AppTheme.accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
 
     final crossPaint = Paint()
@@ -3857,6 +4340,3 @@ class _DebugLog {
 
   static List<String> get logs => List.from(_memLogs);
 }
-
-
-// 4114 - colour
