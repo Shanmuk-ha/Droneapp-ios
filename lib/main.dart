@@ -109,11 +109,14 @@ class _DroneAppState extends State<DroneApp> {
           onSurface: AppTheme.text,
         ),
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (ctx) => const SplashScreen(),
-        '/home': (ctx) => const DroneController(),
-      },
+      home: Scaffold(
+        body: Center(
+          child: Text(
+            'APP STARTED',
+            style: TextStyle(fontSize: 24),
+          ),
+        ),
+      ),
     );
   }
 }
