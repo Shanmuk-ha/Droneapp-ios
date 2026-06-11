@@ -10,37 +10,8 @@ import 'dart:ui' show instantiateImageCodec;
 
 // ── THEME SYSTEM ──────────────────────────────────────────────────────────────
 class AppTheme {
-  static bool isDark = false;
-
-  static const Color darkBg          = Color(0xFF1A1E2E);
-  static const Color darkSurface     = Color(0xFF11152A);
-  static const Color darkCard        = Color(0xFF11152A);
-  static const Color darkBorder      = Color(0xFF1E2840);
-  static const Color darkText        = Color(0xFFD0D8FF);
-  static const Color darkSubtext     = Color(0xFF4A5A88);
-  static const Color darkAccent      = Color(0xFF5A7AFF);
-  static const Color darkAccentLight = Color(0xFF7EB3FF);
-
-  static const Color lightBg          = Color(0xFFF0F2FA);
-  static const Color lightSurface     = Color(0xFFFFFFFF);
-  static const Color lightCard        = Color(0xFFFFFFFF);
-  static const Color lightBorder      = Color(0xFFDDE3F5);
-  static const Color lightText        = Color(0xFF1A1E3A);
-  static const Color lightSubtext     = Color(0xFF6B7BAD);
-  static const Color lightAccent      = Color(0xFF4060FF);
-  static const Color lightAccentLight = Color(0xFF5A7AFF);
-
-  static Color get bg          => isDark ? darkBg          : lightBg;
-  static Color get surface     => isDark ? darkSurface     : lightSurface;
-  static Color get card        => isDark ? darkCard        : lightCard;
-  static Color get border      => isDark ? darkBorder      : lightBorder;
-  static Color get text        => isDark ? darkText        : lightText;
-  static Color get subtext     => isDark ? darkSubtext     : lightSubtext;
-  static Color get accent      => isDark ? darkAccent      : lightAccent;
-  static Color get accentLight => isDark ? darkAccentLight : lightAccentLight;
+  ...
 }
-
-import 'package:flutter/material.dart';
 
 void main() {
   runApp(
@@ -57,7 +28,6 @@ void main() {
     ),
   );
 }
-
 // ── LOGO PAINTER ──────────────────────────────────────────────────────────────
 class _LogoPainter extends CustomPainter {
   final double progress;
