@@ -1,24 +1,80 @@
-import Flutter
 import UIKit
+import Flutter
 
-@main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+    private let recorder = VideoRecorder()
 
-  override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-    return super.application(
-      application,
-      didFinishLaunchingWithOptions: launchOptions
-    )
-  }
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions:
+            [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        GeneratedPluginRegistrant.register(with: self)
 
-  func didInitializeImplicitFlutterEngine(
-    _ engineBridge: FlutterImplicitEngineBridge
-  ) {
-    GeneratedPluginRegistrant.register(
-      with: engineBridge.pluginRegistry
-    )
-  }
+        let controller = window?.rootViewController
+            as! FlutterViewController
+
+        let channel = FlutterMethodChannel(
+            name: "com.quantumrobotix/video",
+            binaryMessenger: controller.binaryMessenger)
+
+        channel.setMethodCallHandler { [weak self]
+            call, result in
+            guard let self = self else { return }
+
+            switch call.method {
+
+            case "startRecording":
+                let args = call.arguments as? [String: Any]
+                let w = args?["width"] as? Int ?? 640
+                let h = args?["height"] as? Int ?? 480
+
+                do {
+                    try self.recorder.startRecording(
+                        width: w,
+                        height: h
+                    )
+                    result(true)
+                } catch {
+                    result(FlutterError(
+                        code: "START_ERROR",
+                        message: error.localizedDescription,
+                        details: nil))
+                }
+
+            case "addFrame":
+                let args = call.arguments as? [String: Any]
+
+                if let bytes = args?["bytes"] as? FlutterStandardTypedData {
+                    self.recorder.addFrame(
+                        jpegData: bytes.data
+                    )
+                }
+
+                result(true)
+
+            case "stopRecording":
+                self.recorder.stopRecording { path in
+                    result(path)
+                }
+
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+
+        let fgChannel = FlutterMethodChannel(
+            name: "com.quantumrobotix/foreground",
+            binaryMessenger: controller.binaryMessenger)
+
+        fgChannel.setMethodCallHandler { _, result in
+            result(true)
+        }
+
+        return super.application(
+            application,
+            didFinishLaunchingWithOptions: launchOptions
+        )
+    }
 }
