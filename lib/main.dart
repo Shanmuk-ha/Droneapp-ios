@@ -40,20 +40,19 @@ class AppTheme {
   static Color get accentLight => isDark ? darkAccentLight : lightAccentLight;
 }
 
-void main() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(
-          child: Text(
-            'APP STARTED',
-            style: TextStyle(fontSize: 24),
-          ),
-        ),
-      ),
-    ),
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
   );
+
+  runApp(const DroneApp());
 }
 
 // ── DRONE APP ─────────────────────────────────────────────────────────────────
