@@ -1817,7 +1817,7 @@ class FlightControlSettingsPage extends StatefulWidget {
 
 class _FlightControlSettingsPageState
     extends State<FlightControlSettingsPage> {
-  double p = 0.56, i = 0.001, d = 0.056, a = 35.0, rT = 0.0, pT = 0.0;
+  double p = 0.420, i = 0.0010, d = 0.036, a = 15.0, rT = 0.0, pT = 0.0;
   // ↑ Roll and Pitch trim default changed to 0.0
 
   final Map<String, List<double>> _bipolarRanges = {
@@ -1836,10 +1836,10 @@ class _FlightControlSettingsPageState
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       setState(() {
-        p  = prefs.getDouble('P')  ?? 0.56;
-        i  = prefs.getDouble('I')  ?? 0.001;
-        d  = prefs.getDouble('D')  ?? 0.056;
-        a  = prefs.getDouble('A')  ?? 35.0;
+        p  = prefs.getDouble('P')  ?? 0.420;
+        i  = prefs.getDouble('I')  ?? 0.0010;
+        d  = prefs.getDouble('D')  ?? 0.036;
+        a  = prefs.getDouble('A')  ?? 15.0;
         rT = prefs.getDouble('RT') ?? 0.0;  // ← default 0
         pT = prefs.getDouble('PT') ?? 0.0;  // ← default 0
       });
@@ -2679,10 +2679,10 @@ class _DroneControllerState extends State<DroneController> {
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       setState(() {
-        p  = prefs.getDouble('P')  ?? 0.56;
-        i  = prefs.getDouble('I')  ?? 0.001;
-        d  = prefs.getDouble('D')  ?? 0.056;
-        a  = prefs.getDouble('A')  ?? 35.0;
+        p  = prefs.getDouble('P')  ?? 0.420;
+        i  = prefs.getDouble('I')  ?? 0.0010;
+        d  = prefs.getDouble('D')  ?? 0.036;
+        a  = prefs.getDouble('A')  ?? 15.0;
         rT = prefs.getDouble('RT') ?? 0;
         pT = prefs.getDouble('PT') ?? 0;
       });
