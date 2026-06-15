@@ -90,14 +90,6 @@
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>QR Drone Controller connects to your drone over local Wi-Fi to send flight controls and receive camera feed.</string>
-
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_drone._udp</string>
-    </array>
-
     <key>NSCameraUsageDescription</key>
     <string>QR Drone Controller displays the live camera feed from your drone.</string>
 
