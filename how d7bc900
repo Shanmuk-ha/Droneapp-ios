@@ -1,0 +1,60 @@
+[33mcommit d7bc9003d4d79fdea16e2ae698c2d48d998ddd18[m
+Author: Raghuvanshi-Kartik <Kartik.Raghuvanshi@s2technology.in>
+Date:   Thu Jun 11 17:53:13 2026 +0530
+
+    Replace iOS project with fresh Flutter template
+
+ ios/Flutter/AppFrameworkInfo.plist                 |   2 [31m-[m
+ ios/Runner.xcodeproj/project.pbxproj               |  36 [32m+[m[31m-[m
+ ios/Runner/Info.plist                              |  56 [32m+[m[31m-[m
+ ios/Runner/SceneDelegate.swift                     |   2 [32m+[m[31m-[m
+ ios/Runner/VideoRecorder.swift                     | 176 [31m------[m
+ ios_backup/.gitignore                              |  34 [32m++[m
+ ios_backup/Flutter/AppFrameworkInfo.plist          |  26 [32m+[m
+ ios_backup/Flutter/Debug.xcconfig                  |   1 [32m+[m
+ ios_backup/Flutter/Release.xcconfig                |   1 [32m+[m
+ {ios => ios_backup}/Podfile.rb                     |   0
+ ios_backup/Runner.xcodeproj/project.pbxproj        | 616 [32m+++++++++++++++++++++[m
+ .../project.xcworkspace/contents.xcworkspacedata   |   7 [32m+[m
+ .../xcshareddata/IDEWorkspaceChecks.plist          |   8 [32m+[m
+ .../xcshareddata/WorkspaceSettings.xcsettings      |   8 [32m+[m
+ .../xcshareddata/xcschemes/Runner.xcscheme         | 101 [32m++++[m
+ .../Runner.xcworkspace/contents.xcworkspacedata    |   7 [32m+[m
+ .../xcshareddata/IDEWorkspaceChecks.plist          |   8 [32m+[m
+ .../xcshareddata/WorkspaceSettings.xcsettings      |   8 [32m+[m
+ ios_backup/Runner/AppDelegate.swift                |  24 [32m+[m
+ .../AppIcon.appiconset/Contents.json               | 122 [32m++++[m
+ .../AppIcon.appiconset/Icon-App-1024x1024@1x.png   | Bin [31m0[m -> [32m274836[m bytes
+ .../AppIcon.appiconset/Icon-App-20x20@1x.png       | Bin [31m0[m -> [32m899[m bytes
+ .../AppIcon.appiconset/Icon-App-20x20@2x.png       | Bin [31m0[m -> [32m2728[m bytes
+ .../AppIcon.appiconset/Icon-App-20x20@3x.png       | Bin [31m0[m -> [32m4835[m bytes
+ .../AppIcon.appiconset/Icon-App-29x29@1x.png       | Bin [31m0[m -> [32m1656[m bytes
+ .../AppIcon.appiconset/Icon-App-29x29@2x.png       | Bin [31m0[m -> [32m4659[m bytes
+ .../AppIcon.appiconset/Icon-App-29x29@3x.png       | Bin [31m0[m -> [32m8881[m bytes
+ .../AppIcon.appiconset/Icon-App-40x40@1x.png       | Bin [31m0[m -> [32m2728[m bytes
+ .../AppIcon.appiconset/Icon-App-40x40@2x.png       | Bin [31m0[m -> [32m7184[m bytes
+ .../AppIcon.appiconset/Icon-App-40x40@3x.png       | Bin [31m0[m -> [32m12651[m bytes
+ .../AppIcon.appiconset/Icon-App-50x50@1x.png       | Bin [31m0[m -> [32m3820[m bytes
+ .../AppIcon.appiconset/Icon-App-50x50@2x.png       | Bin [31m0[m -> [32m10253[m bytes
+ .../AppIcon.appiconset/Icon-App-57x57@1x.png       | Bin [31m0[m -> [32m4524[m bytes
+ .../AppIcon.appiconset/Icon-App-57x57@2x.png       | Bin [31m0[m -> [32m11810[m bytes
+ .../AppIcon.appiconset/Icon-App-60x60@2x.png       | Bin [31m0[m -> [32m12651[m bytes
+ .../AppIcon.appiconset/Icon-App-60x60@3x.png       | Bin [31m0[m -> [32m22528[m bytes
+ .../AppIcon.appiconset/Icon-App-72x72@1x.png       | Bin [31m0[m -> [32m6078[m bytes
+ .../AppIcon.appiconset/Icon-App-72x72@2x.png       | Bin [31m0[m -> [32m16402[m bytes
+ .../AppIcon.appiconset/Icon-App-76x76@1x.png       | Bin [31m0[m -> [32m6683[m bytes
+ .../AppIcon.appiconset/Icon-App-76x76@2x.png       | Bin [31m0[m -> [32m17708[m bytes
+ .../AppIcon.appiconset/Icon-App-83.5x83.5@2x.png   | Bin [31m0[m -> [32m20113[m bytes
+ .../LaunchImage.imageset/Contents.json             |  23 [32m+[m
+ .../LaunchImage.imageset/LaunchImage.png           | Bin [31m0[m -> [32m68[m bytes
+ .../LaunchImage.imageset/LaunchImage@2x.png        | Bin [31m0[m -> [32m68[m bytes
+ .../LaunchImage.imageset/LaunchImage@3x.png        | Bin [31m0[m -> [32m68[m bytes
+ .../Assets.xcassets/LaunchImage.imageset/README.md |   5 [32m+[m
+ .../Runner/Base.lproj/LaunchScreen.storyboard      |  37 [32m++[m
+ ios_backup/Runner/Base.lproj/Main.storyboard       |  26 [32m+[m
+ ios_backup/Runner/Info.plist                       | 109 [32m++++[m
+ ios_backup/Runner/Runner-Bridging-Header.h         |   1 [32m+[m
+ ios_backup/Runner/SceneDelegate.swift              |   6 [32m+[m
+ ios_backup/RunnerTests/RunnerTests.swift           |  12 [32m+[m
+ pubspec.yaml                                       |   2 [32m+[m[31m-[m
+ 53 files changed, 1242 insertions(+), 222 deletions(-)
