@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -88,14 +88,6 @@
         <string>UIInterfaceOrientationPortraitUpsideDown</string>
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
-
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>QR Drone Controller connects to your drone over local Wi-Fi to send flight controls and receive camera feed.</string>
-
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_drone._udp</string>
     </array>
 
     <key>NSCameraUsageDescription</key>
