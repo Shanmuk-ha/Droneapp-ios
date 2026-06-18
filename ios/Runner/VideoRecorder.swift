@@ -170,3 +170,4 @@ class VideoRecorder: NSObject {
            }
        }
    }
+}
