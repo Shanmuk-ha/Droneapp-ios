@@ -40,6 +40,33 @@ class AppTheme {
   static Color get accentLight => isDark ? darkAccentLight : lightAccentLight;
 }
 
+/// Shared constraints so AlertDialogs fit small landscape phones.
+({double scale, EdgeInsets inset, double maxW, double maxH}) _dialogMetrics(
+    BuildContext context) {
+  final size = MediaQuery.of(context).size;
+  final scale = (size.shortestSide / 360).clamp(0.72, 1.15);
+  return (
+    scale: scale,
+    inset: EdgeInsets.symmetric(
+      horizontal: size.width * 0.05,
+      vertical: size.height * 0.04,
+    ),
+    maxW: min(420.0, size.width * 0.82),
+    maxH: size.height * 0.82,
+  );
+}
+
+Widget _scrollableDialogBody({
+  required double maxW,
+  required double maxH,
+  required Widget child,
+}) {
+  return ConstrainedBox(
+    constraints: BoxConstraints(maxWidth: maxW, maxHeight: maxH),
+    child: SingleChildScrollView(child: child),
+  );
+}
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -155,6 +182,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    final logoW = min(560.0, screenW * 0.88);
+    final logoH = logoW * (100 / 560);
     return Scaffold(
       backgroundColor: const Color(0xFF111520),
       body: Center(
@@ -164,11 +194,11 @@ class _SplashScreenState extends State<SplashScreen>
             AnimatedBuilder(
               animation: _logoController,
               builder: (_, __) => CustomPaint(
-                size: const Size(560, 100),
+                size: Size(logoW, logoH),
                 painter: _LogoPainter(progress: _logoController.value),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.06),
             AnimatedBuilder(
               animation: _barController,
               builder: (_, __) => Opacity(
@@ -178,7 +208,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ClipRRect(
                       borderRadius: BorderRadius.circular(2),
                       child: SizedBox(
-                        width: 160,
+                        width: min(160.0, screenW * 0.28),
                         height: 2,
                         child: Stack(children: [
                           Container(color: const Color(0xFF1E2840)),
@@ -519,18 +549,22 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final step = _steps[_step];
     final isLast = _step == _steps.length - 1;
     final color = step['color'] as Color;
+    final size = MediaQuery.of(context).size;
+    final scale = (size.shortestSide / 360).clamp(0.75, 1.15);
     return Material(
       color: Colors.black.withOpacity(0.75),
       child: Center(
         child: FadeTransition(
           opacity: _fadeAnim,
           child: Container(
-            width: 420,
-            // ── FIX: constrain max height so the modal never exceeds the screen ──
+            width: min(420.0, size.width * 0.88),
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.85,
+              maxHeight: size.height * 0.88,
             ),
-            margin: const EdgeInsets.all(32),
+            margin: EdgeInsets.symmetric(
+              horizontal: size.width * 0.04,
+              vertical: size.height * 0.04,
+            ),
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(20),
@@ -549,7 +583,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                 // ── Header (fixed, never scrolls) ──
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(18 * scale),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: const BorderRadius.vertical(
@@ -558,8 +592,8 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                   child: Column(
                     children: [
                       Container(
-                        width: 64,
-                        height: 64,
+                        width: 56 * scale,
+                        height: 56 * scale,
                         decoration: BoxDecoration(
                           color: color.withOpacity(0.15),
                           shape: BoxShape.circle,
@@ -567,15 +601,15 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                           Border.all(color: color.withOpacity(0.4)),
                         ),
                         child: Icon(step['icon'] as IconData,
-                            color: color, size: 32),
+                            color: color, size: 28 * scale),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 12 * scale),
                       Text(
                         step['title'] as String,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: AppTheme.text,
-                          fontSize: 17,
+                          fontSize: 16 * scale,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -585,7 +619,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                 // ── Body (scrollable) ──
                 Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(18 * scale),
                     child: Column(
                       children: [
                         Text(
@@ -593,15 +627,15 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: AppTheme.text,
-                            fontSize: 13,
-                            height: 1.6,
+                            fontSize: 12.5 * scale,
+                            height: 1.55,
                           ),
                         ),
                         if (step['tip'] != null) ...[
-                          const SizedBox(height: 14),
+                          SizedBox(height: 12 * scale),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(10 * scale),
                             decoration: BoxDecoration(
                               color: color.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(10),
@@ -612,8 +646,8 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                               step['tip'] as String,
                               style: TextStyle(
                                 color: color,
-                                fontSize: 12,
-                                height: 1.5,
+                                fontSize: 11.5 * scale,
+                                height: 1.45,
                               ),
                             ),
                           ),
@@ -736,21 +770,25 @@ class _SettingsPageState extends State<SettingsPage> {
         title: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 color: AppTheme.accent,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.air,
-                  color: Colors.white, size: 22),
+                  color: Colors.white, size: 20),
             ),
             const SizedBox(width: 10),
-            Text('QR Drone Controller',
-                style: TextStyle(
-                    color: AppTheme.text,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
+            Expanded(
+              child: Text('QR Drone Controller',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: AppTheme.text,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600)),
+            ),
           ],
         ),
       ),
@@ -881,7 +919,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _SectionHeader(title: 'About'),
           _SettingsItem(
             title: 'App version',
-            subtitle: '1.0.6 (build 1)',
+            subtitle: '1.0.8 (build 41)',
             icon: Icons.info_outline,
             onTap: () {},
             showChevron: false,
@@ -905,33 +943,45 @@ class _SettingsPageState extends State<SettingsPage> {
         required String message}) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          Icon(icon, color: iconColor, size: 22),
-          const SizedBox(width: 8),
-          Flexible(
-              child: Text(title,
-                  style: TextStyle(color: iconColor))),
-        ]),
-        content: Text(message,
-            style: TextStyle(
-                color: AppTheme.text, fontSize: 13)),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK',
-                style: TextStyle(color: Colors.white)),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Row(children: [
+            Icon(icon, color: iconColor, size: 20 * m.scale),
+            SizedBox(width: 8 * m.scale),
+            Flexible(
+                child: Text(title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: iconColor, fontSize: 15 * m.scale))),
+          ]),
+          content: _scrollableDialogBody(
+            maxW: m.maxW,
+            maxH: m.maxH * 0.55,
+            child: Text(message,
+                style: TextStyle(
+                    color: AppTheme.text, fontSize: 13 * m.scale)),
           ),
-        ],
-      ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('OK',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14 * m.scale)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -1006,6 +1056,8 @@ class _SettingsItem extends StatelessWidget {
           )
               : null,
           title: Text(title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                   color: disabled && !showWarning
                       ? AppTheme.subtext
@@ -1013,6 +1065,8 @@ class _SettingsItem extends StatelessWidget {
                   fontSize: 15)),
           subtitle: subtitle != null
               ? Text(subtitle!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: showWarning
                     ? const Color(0xFFF5C842)
@@ -1097,47 +1151,68 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.info_outline,
-                color: AppTheme.accent, size: 22),
-            const SizedBox(width: 8),
-            Text('Before calibrating',
-                style: TextStyle(
-                    color: AppTheme.accent,
-                    fontWeight: FontWeight.w500)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _BulletPoint('Place the drone on a flat, level surface'),
-            _BulletPoint(
-                'Make sure the drone is completely stationary'),
-            _BulletPoint('Drone must be paired but NOT armed'),
-            _BulletPoint(
-                'Do not touch the drone during calibration'),
-            _BulletPoint('Calibration takes 5 seconds to complete'),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Got it',
-                style: TextStyle(color: Colors.white)),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.info_outline,
+                  color: AppTheme.accent, size: 20 * m.scale),
+              SizedBox(width: 8 * m.scale),
+              Expanded(
+                child: Text('Before calibrating',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: AppTheme.accent,
+                        fontSize: 15 * m.scale,
+                        fontWeight: FontWeight.w500)),
+              ),
+            ],
           ),
-        ],
-      ),
+          content: _scrollableDialogBody(
+            maxW: m.maxW,
+            maxH: m.maxH * 0.7,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _BulletPoint(
+                    'Place the drone on a flat, level surface',
+                    scale: m.scale),
+                _BulletPoint(
+                    'Make sure the drone is completely stationary',
+                    scale: m.scale),
+                _BulletPoint('Drone must be paired but NOT armed',
+                    scale: m.scale),
+                _BulletPoint(
+                    'Do not touch the drone during calibration',
+                    scale: m.scale),
+                _BulletPoint(
+                    'Calibration takes 5 seconds to complete',
+                    scale: m.scale),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Got it',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14 * m.scale)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1203,56 +1278,77 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle,
-                color: Color(0xFF3DDA82), size: 24),
-            SizedBox(width: 10),
-            Text('Calibration complete',
-                style: TextStyle(color: Color(0xFF3DDA82))),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'The drone has been successfully level calibrated.',
-              style: TextStyle(color: AppTheme.text, fontSize: 13),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Your flight control settings remain unchanged.',
-              style:
-              TextStyle(color: AppTheme.subtext, fontSize: 12),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3DDA82),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text('Done',
-                style: TextStyle(color: Colors.white)),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.check_circle,
+                  color: const Color(0xFF3DDA82), size: 22 * m.scale),
+              SizedBox(width: 10 * m.scale),
+              Expanded(
+                child: Text('Calibration complete',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: const Color(0xFF3DDA82),
+                        fontSize: 15 * m.scale)),
+              ),
+            ],
           ),
-        ],
-      ),
+          content: _scrollableDialogBody(
+            maxW: m.maxW,
+            maxH: m.maxH * 0.5,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'The drone has been successfully level calibrated.',
+                  style: TextStyle(
+                      color: AppTheme.text, fontSize: 13 * m.scale),
+                ),
+                SizedBox(height: 10 * m.scale),
+                Text(
+                  'Your flight control settings remain unchanged.',
+                  style: TextStyle(
+                      color: AppTheme.subtext, fontSize: 12 * m.scale),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3DDA82),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context);
+              },
+              child: Text('Done',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14 * m.scale)),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenW = MediaQuery.of(context).size.width;
+    final screenH = MediaQuery.of(context).size.height;
+    final scale = (min(screenW, screenH) / 360).clamp(0.72, 1.2);
+    final circleSize = min(screenW * 0.28, screenH * 0.48);
+
     return Scaffold(
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
@@ -1277,170 +1373,180 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Padding(
-          padding:
-          const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedBuilder(
-                animation: _pulseAnim,
-                builder: (_, __) => Transform.scale(
-                  scale: _isCalibrating ? _pulseAnim.value : 1.0,
-                  child: Container(
-                    width: 180,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _calibrated
-                            ? const Color(0xFF3DDA82)
-                            : _isCalibrating
-                            ? AppTheme.accent
-                            : AppTheme.border,
-                        width: _isCalibrating ? 3 : 2,
+      body: SafeArea(
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenW * 0.04,
+                vertical: screenH * 0.02,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, __) => Transform.scale(
+                      alignment: Alignment.center,
+                      scale: _isCalibrating ? _pulseAnim.value : 1.0,
+                      child: Container(
+                        width: circleSize,
+                        height: circleSize,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _calibrated
+                                ? const Color(0xFF3DDA82)
+                                : _isCalibrating
+                                    ? AppTheme.accent
+                                    : AppTheme.border,
+                            width: _isCalibrating ? 3 : 2,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _calibrated
+                                  ? Icons.check_circle_outline
+                                  : _isCalibrating
+                                      ? Icons.sync
+                                      : Icons.explore_outlined,
+                              color: _calibrated
+                                  ? const Color(0xFF3DDA82)
+                                  : AppTheme.accent,
+                              size: circleSize * 0.28,
+                            ),
+                            SizedBox(height: screenH * 0.01),
+                            if (_isCalibrating) ...[
+                              Text(
+                                '$_calibrationSeconds / $_totalSeconds',
+                                style: TextStyle(
+                                  color: AppTheme.accent,
+                                  fontSize: 20 * scale,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                              SizedBox(height: screenH * 0.004),
+                              Text('Calibrating...',
+                                  style: TextStyle(
+                                      color: AppTheme.accentLight,
+                                      fontSize: 12 * scale)),
+                            ] else if (_calibrated) ...[
+                              Text('Calibrated',
+                                  style: TextStyle(
+                                      color: const Color(0xFF3DDA82),
+                                      fontSize: 15 * scale,
+                                      fontWeight: FontWeight.w500)),
+                            ] else ...[
+                              Text('Ready',
+                                  style: TextStyle(
+                                      color: AppTheme.accentLight,
+                                      fontSize: 15 * scale,
+                                      fontWeight: FontWeight.w500)),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _calibrated
-                              ? Icons.check_circle_outline
-                              : _isCalibrating
-                              ? Icons.sync
-                              : Icons.explore_outlined,
+                  ),
+
+                  SizedBox(height: screenH * 0.04),
+
+                  if (_isCalibrating) ...[
+                    SizedBox(
+                      width: min(240.0, screenW * 0.4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: _calibrationSeconds / _totalSeconds,
+                          backgroundColor: AppTheme.border,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.accent),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: screenH * 0.015),
+                    Text(
+                      'Keep the drone still on a flat surface',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: AppTheme.subtext,
+                          fontSize: 12 * scale),
+                    ),
+                    SizedBox(height: screenH * 0.03),
+                  ] else
+                    SizedBox(height: screenH * 0.03),
+
+                  SizedBox(
+                    width: min(240.0, screenW * 0.4),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _calibrated
+                            ? const Color(0xFF0E2E1A)
+                            : _isCalibrating
+                                ? AppTheme.border
+                                : AppTheme.accent,
+                        padding: EdgeInsets.symmetric(
+                            vertical: max(10.0, screenH * 0.025)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: _calibrated
+                                ? const Color(0xFF3DDA82)
+                                : Colors.transparent,
+                          ),
+                        ),
+                      ),
+                      onPressed:
+                          _isCalibrating ? null : _startCalibration,
+                      child: Text(
+                        _calibrated
+                            ? 'Calibrate again'
+                            : _isCalibrating
+                                ? 'Calibrating...'
+                                : 'Start calibration',
+                        style: TextStyle(
                           color: _calibrated
                               ? const Color(0xFF3DDA82)
-                              : AppTheme.accent,
-                          size: 52,
+                              : _isCalibrating
+                                  ? AppTheme.subtext
+                                  : Colors.white,
+                          fontSize: 14 * scale,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(height: 12),
-                        if (_isCalibrating) ...[
-                          Text(
-                            '$_calibrationSeconds / $_totalSeconds',
-                            style: TextStyle(
-                              color: AppTheme.accent,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text('Calibrating...',
-                              style: TextStyle(
-                                  color: AppTheme.accentLight,
-                                  fontSize: 12)),
-                        ] else if (_calibrated) ...[
-                          const Text('Calibrated',
-                              style: TextStyle(
-                                  color: Color(0xFF3DDA82),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500)),
-                        ] else ...[
-                          Text('Ready',
-                              style: TextStyle(
-                                  color: AppTheme.accentLight,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500)),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              if (_isCalibrating) ...[
-                SizedBox(
-                  width: 240,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: _calibrationSeconds / _totalSeconds,
-                      backgroundColor: AppTheme.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.accent),
-                      minHeight: 6,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Keep the drone still on a flat surface',
-                  style: TextStyle(
-                      color: AppTheme.subtext, fontSize: 12),
-                ),
-                const SizedBox(height: 32),
-              ] else
-                const SizedBox(height: 32),
-
-              SizedBox(
-                width: 240,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _calibrated
-                        ? const Color(0xFF0E2E1A)
-                        : _isCalibrating
-                        ? AppTheme.border
-                        : AppTheme.accent,
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: _calibrated
-                            ? const Color(0xFF3DDA82)
-                            : Colors.transparent,
                       ),
                     ),
                   ),
-                  onPressed:
-                  _isCalibrating ? null : _startCalibration,
-                  child: Text(
-                    _calibrated
-                        ? 'Calibrate again'
-                        : _isCalibrating
-                        ? 'Calibrating...'
-                        : 'Start calibration',
-                    style: TextStyle(
-                      color: _calibrated
-                          ? const Color(0xFF3DDA82)
-                          : _isCalibrating
-                          ? AppTheme.subtext
-                          : Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+
+                  SizedBox(height: screenH * 0.02),
+
+                  if (!_isCalibrating && !_calibrated)
+                    GestureDetector(
+                      onTap: _showInstructionsDialog,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.help_outline,
+                              color: AppTheme.subtext, size: 14),
+                          const SizedBox(width: 4),
+                          Text('View instructions',
+                              style: TextStyle(
+                                  color: AppTheme.subtext,
+                                  fontSize: 12 * scale)),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                ],
               ),
-
-              const SizedBox(height: 16),
-
-              if (!_isCalibrating && !_calibrated)
-                GestureDetector(
-                  onTap: _showInstructionsDialog,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.help_outline,
-                          color: AppTheme.subtext, size: 14),
-                      const SizedBox(width: 4),
-                      Text('View instructions',
-                          style: TextStyle(
-                              color: AppTheme.subtext,
-                              fontSize: 12)),
-                    ],
-                  ),
-                ),
-
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
         ),
       ),
@@ -1450,21 +1556,22 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
 
 class _BulletPoint extends StatelessWidget {
   final String text;
-  const _BulletPoint(this.text);
+  final double scale;
+  const _BulletPoint(this.text, {this.scale = 1.0});
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: EdgeInsets.only(bottom: 6 * scale),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('• ',
               style: TextStyle(
-                  color: AppTheme.accent, fontSize: 13)),
+                  color: AppTheme.accent, fontSize: 13 * scale)),
           Expanded(
             child: Text(text,
                 style: TextStyle(
-                    color: AppTheme.text, fontSize: 13)),
+                    color: AppTheme.text, fontSize: 13 * scale)),
           ),
         ],
       ),
@@ -1729,7 +1836,7 @@ class FlightControlSettingsPage extends StatefulWidget {
 
 class _FlightControlSettingsPageState
     extends State<FlightControlSettingsPage> {
-  double p = 0.56, i = 0.001, d = 0.056, a = 35.0, rT = 0.0, pT = 0.0;
+  double p = 0.480, i = 15.0, d = 0.060, a = 15.0, rT = 0.0, pT = 0.0;
   // ↑ Roll and Pitch trim default changed to 0.0
 
   final Map<String, List<double>> _bipolarRanges = {
@@ -1748,10 +1855,10 @@ class _FlightControlSettingsPageState
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       setState(() {
-        p  = prefs.getDouble('P')  ?? 0.56;
-        i  = prefs.getDouble('I')  ?? 0.001;
-        d  = prefs.getDouble('D')  ?? 0.056;
-        a  = prefs.getDouble('A')  ?? 35.0;
+        p  = prefs.getDouble('P')  ?? 0.480;
+        i  = prefs.getDouble('I')  ?? 15.0;
+        d  = prefs.getDouble('D')  ?? 0.060;
+        a  = prefs.getDouble('A')  ?? 15.0;
         rT = prefs.getDouble('RT') ?? 0.0;  // ← default 0
         pT = prefs.getDouble('PT') ?? 0.0;  // ← default 0
       });
@@ -1798,57 +1905,69 @@ class _FlightControlSettingsPageState
     TextEditingController(text: current.toStringAsFixed(4));
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Text('Edit $label',
-            style: TextStyle(
-                color: AppTheme.accentLight,
-                fontWeight: FontWeight.bold)),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(
-              decimal: true, signed: true),
-          style: TextStyle(color: AppTheme.text, fontSize: 18),
-          decoration: InputDecoration(
-            hintText: 'Enter value',
-            hintStyle: TextStyle(color: AppTheme.subtext),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppTheme.border)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide:
-                BorderSide(color: AppTheme.accent, width: 2)),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                  style: TextStyle(color: AppTheme.subtext))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Text('Edit $label',
+              style: TextStyle(
+                  color: AppTheme.accentLight,
+                  fontSize: 16 * m.scale,
+                  fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: m.maxW,
+            child: TextField(
+              controller: controller,
+              keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true, signed: true),
+              style: TextStyle(
+                  color: AppTheme.text, fontSize: 17 * m.scale),
+              decoration: InputDecoration(
+                hintText: 'Enter value',
+                hintStyle: TextStyle(color: AppTheme.subtext),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppTheme.border)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide:
+                    BorderSide(color: AppTheme.accent, width: 2)),
+              ),
+              autofocus: true,
             ),
-            onPressed: () {
-              final val = double.tryParse(controller.text);
-              if (val != null) {
-                _setValue(key, val);
-                // Save immediately after setting
-                _saveValues();
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Save',
-                style: TextStyle(color: Colors.white)),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Cancel',
+                    style: TextStyle(
+                        color: AppTheme.subtext,
+                        fontSize: 14 * m.scale))),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                final val = double.tryParse(controller.text);
+                if (val != null) {
+                  _setValue(key, val);
+                  // Save immediately after setting
+                  _saveValues();
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text('Save',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14 * m.scale)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1859,84 +1978,100 @@ class _FlightControlSettingsPageState
     final currentMax = _bipolarRanges[key]![1];
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Text('Edit $label',
-            style: TextStyle(
-                color: AppTheme.accentLight,
-                fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Range: $currentMin – $currentMax',
-                style:
-                TextStyle(color: AppTheme.subtext, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(
-              'Enter value outside range to auto-expand slider',
-              style:
-              TextStyle(color: AppTheme.subtext, fontSize: 11),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Text('Edit $label',
+              style: TextStyle(
+                  color: AppTheme.accentLight,
+                  fontSize: 16 * m.scale,
+                  fontWeight: FontWeight.bold)),
+          content: _scrollableDialogBody(
+            maxW: m.maxW,
+            maxH: m.maxH * 0.55,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Range: $currentMin – $currentMax',
+                    style: TextStyle(
+                        color: AppTheme.subtext,
+                        fontSize: 12 * m.scale)),
+                SizedBox(height: 4 * m.scale),
+                Text(
+                  'Enter value outside range to auto-expand slider',
+                  style: TextStyle(
+                      color: AppTheme.subtext,
+                      fontSize: 11 * m.scale),
+                ),
+                SizedBox(height: 10 * m.scale),
+                TextField(
+                  controller: controller,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
+                  style: TextStyle(
+                      color: AppTheme.text, fontSize: 17 * m.scale),
+                  decoration: InputDecoration(
+                    hintText: 'Enter value',
+                    hintStyle: TextStyle(color: AppTheme.subtext),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide:
+                            BorderSide(color: AppTheme.border)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                            color: AppTheme.accent, width: 2)),
+                  ),
+                  autofocus: true,
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true, signed: true),
-              style: TextStyle(color: AppTheme.text, fontSize: 18),
-              decoration: InputDecoration(
-                hintText: 'Enter value',
-                hintStyle: TextStyle(color: AppTheme.subtext),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                    BorderSide(color: AppTheme.border)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                        color: AppTheme.accent, width: 2)),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('Cancel',
+                    style: TextStyle(
+                        color: AppTheme.subtext,
+                        fontSize: 14 * m.scale))),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
-              autofocus: true,
+              onPressed: () {
+                final val = double.tryParse(controller.text);
+                if (val != null) {
+                  setState(() {
+                    // Auto-expand range if needed
+                    final span = _bipolarRanges[key]![1] -
+                        _bipolarRanges[key]![0];
+                    if (val < _bipolarRanges[key]![0]) {
+                      _bipolarRanges[key]![0] = val - span * 0.1;
+                    }
+                    if (val > _bipolarRanges[key]![1]) {
+                      _bipolarRanges[key]![1] = val + span * 0.1;
+                    }
+                  });
+                  _setValue(key, val);
+                  _saveValues();
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text('Save',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14 * m.scale)),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                  style: TextStyle(color: AppTheme.subtext))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              final val = double.tryParse(controller.text);
-              if (val != null) {
-                setState(() {
-                  // Auto-expand range if needed
-                  final span = _bipolarRanges[key]![1] -
-                      _bipolarRanges[key]![0];
-                  if (val < _bipolarRanges[key]![0]) {
-                    _bipolarRanges[key]![0] = val - span * 0.1;
-                  }
-                  if (val > _bipolarRanges[key]![1]) {
-                    _bipolarRanges[key]![1] = val + span * 0.1;
-                  }
-                });
-                _setValue(key, val);
-                _saveValues();
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Save',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -2183,48 +2318,61 @@ class _FlightControlSettingsPageState
             onTap: () {
               showDialog(
                 context: context,
-                builder: (ctx) => AlertDialog(
-                  backgroundColor: AppTheme.surface,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  title: Text('Reset to defaults?',
-                      style: TextStyle(color: AppTheme.text)),
-                  content: Text(
-                    'P=0.56  I=0.001  D=0.056  A=35\nR=0  Pt=0',
-                    style: TextStyle(
-                        color: AppTheme.subtext,
-                        fontSize: 13,
-                        fontFamily: 'monospace'),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text('Cancel',
-                          style: TextStyle(
-                              color: AppTheme.subtext)),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accent,
-                        shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(8)),
+                builder: (ctx) {
+                  final m = _dialogMetrics(ctx);
+                  return AlertDialog(
+                    backgroundColor: AppTheme.surface,
+                    insetPadding: m.inset,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    title: Text('Reset to defaults?',
+                        style: TextStyle(
+                            color: AppTheme.text,
+                            fontSize: 16 * m.scale)),
+                    content: _scrollableDialogBody(
+                      maxW: m.maxW,
+                      maxH: m.maxH * 0.4,
+                      child: Text(
+                        'P=0.480  I=15.0  D=0.060  A=15\nR=0  Pt=0',
+                        style: TextStyle(
+                            color: AppTheme.subtext,
+                            fontSize: 13 * m.scale,
+                            fontFamily: 'monospace'),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          p = 0.56; i = 0.001; d = 0.056;
-                          a = 35.0; rT = 0.0;  pT = 0.0;
-                          _bipolarRanges['R']  = [-2.0, 2.0];
-                          _bipolarRanges['Pt'] = [-2.0, 2.0];
-                        });
-                        _saveValues();
-                        Navigator.pop(ctx);
-                      },
-                      child: const Text('Reset',
-                          style: TextStyle(color: Colors.white)),
                     ),
-                  ],
-                ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text('Cancel',
+                            style: TextStyle(
+                                color: AppTheme.subtext,
+                                fontSize: 14 * m.scale)),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accent,
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                              BorderRadius.circular(8)),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            p = 0.480; i = 15.0; d = 0.060;
+                            a = 15.0; rT = 0.0;  pT = 0.0;
+                            _bipolarRanges['R']  = [-2.0, 2.0];
+                            _bipolarRanges['Pt'] = [-2.0, 2.0];
+                          });
+                          _saveValues();
+                          Navigator.pop(ctx);
+                        },
+                        child: Text('Reset',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14 * m.scale)),
+                      ),
+                    ],
+                  );
+                },
               );
             },
             child: Container(
@@ -2482,7 +2630,7 @@ class _DroneControllerState extends State<DroneController> {
   double get yawDeg   => (yaw   / 254.0) * 180.0 - 90.0;
   int    get thrPct   => (throttle / 254.0 * 100).round();
 
-  double p = 0.56, i = 0.001, d = 0.056, a = 35.0, rT = 0.8, pT = 0.9;
+  double p = 0.480, i = 15.0, d = 0.060, a = 15.0, rT = 0.8, pT = 0.9;
 
   bool isPaired        = false;
   bool isArmed         = false;
@@ -2591,10 +2739,10 @@ class _DroneControllerState extends State<DroneController> {
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       setState(() {
-        p  = prefs.getDouble('P')  ?? 0.56;
-        i  = prefs.getDouble('I')  ?? 0.001;
-        d  = prefs.getDouble('D')  ?? 0.056;
-        a  = prefs.getDouble('A')  ?? 35.0;
+        p  = prefs.getDouble('P')  ?? 0.480;
+        i  = prefs.getDouble('I')  ?? 15.0;
+        d  = prefs.getDouble('D')  ?? 0.060;
+        a  = prefs.getDouble('A')  ?? 15.0;
         rT = prefs.getDouble('RT') ?? 0;
         pT = prefs.getDouble('PT') ?? 0;
       });
@@ -2656,7 +2804,7 @@ class _DroneControllerState extends State<DroneController> {
     });
   }
 
-  Widget _buildFlightButtons() {
+  Widget _buildFlightButtons([double scale = 1.0]) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -2665,8 +2813,8 @@ class _DroneControllerState extends State<DroneController> {
           onTap: _toggleHeadless,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 7),
+            padding: EdgeInsets.symmetric(
+                horizontal: 14 * scale, vertical: 7 * scale),
             decoration: BoxDecoration(
               color: _headless == 1
                   ? const Color(0xFF0A1628)
@@ -2686,19 +2834,19 @@ class _DroneControllerState extends State<DroneController> {
               children: [
                 Icon(
                   Icons.explore,
-                  size: 13,
+                  size: 13 * scale,
                   color: _headless == 1
                       ? const Color(0xFF38BDF8)
                       : AppTheme.subtext,
                 ),
-                const SizedBox(width: 5),
+                SizedBox(width: 5 * scale),
                 Text(
-                  _headless == 1 ? 'HEADLESS' : 'HEADLESS',
+                  'HEADLESS',
                   style: TextStyle(
                     color: _headless == 1
                         ? const Color(0xFF38BDF8)
                         : AppTheme.subtext,
-                    fontSize: 10,
+                    fontSize: 10 * scale,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -2708,15 +2856,15 @@ class _DroneControllerState extends State<DroneController> {
           ),
         ),
 
-        const SizedBox(width: 10),
+        SizedBox(width: 10 * scale),
 
         // ── Flip button — same style as headless ──
         GestureDetector(
           onTap: _flipDisabled ? null : _triggerFlip,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 7),
+            padding: EdgeInsets.symmetric(
+                horizontal: 14 * scale, vertical: 7 * scale),
             decoration: BoxDecoration(
               color: _flip == 1
                   ? const Color(0xFF38BDF8)
@@ -2738,14 +2886,14 @@ class _DroneControllerState extends State<DroneController> {
               children: [
                 Icon(
                   Icons.flip_camera_android,
-                  size: 13,
+                  size: 13 * scale,
                   color: _flipDisabled
                       ? AppTheme.subtext.withOpacity(0.3)
                       : _flip == 1
                       ? const Color(0xFFF59E0B)
                       : AppTheme.subtext,
                 ),
-                const SizedBox(width: 5),
+                SizedBox(width: 5 * scale),
                 Text(
                   'FLIP',
                   style: TextStyle(
@@ -2754,7 +2902,7 @@ class _DroneControllerState extends State<DroneController> {
                         : _flip == 1
                         ? const Color(0xFFF59E0B)
                         : AppTheme.subtext,
-                    fontSize: 10,
+                    fontSize: 10 * scale,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),
@@ -2939,80 +3087,95 @@ class _DroneControllerState extends State<DroneController> {
     if (!mounted) return;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.wifi_off, color: Color(0xFFFF5757), size: 22),
-            SizedBox(width: 8),
-            Flexible(
-              child: Text('Drone Wi-Fi not detected',
-                  style: TextStyle(color: Color(0xFFFF5757))),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'You are connected to a Wi-Fi network which does not belong to the drone',
-              style: TextStyle(color: AppTheme.text, fontSize: 13),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.isDark
-                    ? const Color(0xFF0E1830)
-                    : const Color(0xFFE8EEFF),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: AppTheme.accent.withOpacity(0.3)),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.wifi_off,
+                  color: const Color(0xFFFF5757), size: 20 * m.scale),
+              SizedBox(width: 8 * m.scale),
+              Flexible(
+                child: Text('Drone Wi-Fi not detected',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: const Color(0xFFFF5757),
+                        fontSize: 14 * m.scale)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('To connect:',
-                      style: TextStyle(
-                          color: AppTheme.accent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  _StepRow(
-                      number: '1',
-                      text: 'Power on your QR drone'),
-                  _StepRow(
-                      number: '2',
-                      text: 'Go to phone Settings → Wi-Fi'),
-                  _StepRow(
-                      number: '3',
-                      text:
-                      'Connect to the drone\'s Wi-Fi network'),
-                  _StepRow(
-                      number: '4',
-                      text: 'Return here and tap PAIR'),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK',
-                style: TextStyle(color: Colors.white)),
+            ],
           ),
-        ],
-      ),
+          content: _scrollableDialogBody(
+            maxW: m.maxW,
+            maxH: m.maxH * 0.7,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'You are connected to a Wi-Fi network which does not belong to the drone',
+                  style: TextStyle(
+                      color: AppTheme.text, fontSize: 13 * m.scale),
+                ),
+                SizedBox(height: 12 * m.scale),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(10 * m.scale),
+                  decoration: BoxDecoration(
+                    color: AppTheme.isDark
+                        ? const Color(0xFF0E1830)
+                        : const Color(0xFFE8EEFF),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: AppTheme.accent.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('To connect:',
+                          style: TextStyle(
+                              color: AppTheme.accent,
+                              fontSize: 12 * m.scale,
+                              fontWeight: FontWeight.w500)),
+                      SizedBox(height: 8 * m.scale),
+                      _StepRow(
+                          number: '1',
+                          text: 'Power on your QR drone'),
+                      _StepRow(
+                          number: '2',
+                          text: 'Go to phone Settings → Wi-Fi'),
+                      _StepRow(
+                          number: '3',
+                          text:
+                          'Connect to the drone\'s Wi-Fi network'),
+                      _StepRow(
+                          number: '4',
+                          text: 'Return here and tap PAIR'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('OK',
+                  style: TextStyle(
+                      color: Colors.white, fontSize: 14 * m.scale)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -3086,73 +3249,91 @@ class _DroneControllerState extends State<DroneController> {
   void _confirmClose(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.power_settings_new,
-                color: Color(0xFFFF5757), size: 22),
-            SizedBox(width: 8),
-            Text('Close app?',
-                style: TextStyle(color: Color(0xFFFF5757))),
-          ],
-        ),
-        content: Text(
-          isArmed
-              ? 'The drone is currently ARMED.\n\nPlease disarm before closing for safe motor shutdown.'
-              : isPaired
-              ? 'This will disconnect from the drone and close the app.'
-              : 'Close QR Drone Controller?',
-          style: TextStyle(color: AppTheme.text, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel',
-                style: TextStyle(color: AppTheme.subtext)),
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          insetPadding: m.inset,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.power_settings_new,
+                  color: const Color(0xFFFF5757), size: 20 * m.scale),
+              SizedBox(width: 8 * m.scale),
+              Expanded(
+                child: Text('Close app?',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: const Color(0xFFFF5757),
+                        fontSize: 15 * m.scale)),
+              ),
+            ],
           ),
-          if (isArmed)
+          content: _scrollableDialogBody(
+            maxW: m.maxW,
+            maxH: m.maxH * 0.5,
+            child: Text(
+              isArmed
+                  ? 'The drone is currently ARMED.\n\nPlease disarm before closing for safe motor shutdown.'
+                  : isPaired
+                  ? 'This will disconnect from the drone and close the app.'
+                  : 'Close QR Drone Controller?',
+              style: TextStyle(
+                  color: AppTheme.text, fontSize: 13 * m.scale),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Cancel',
+                  style: TextStyle(
+                      color: AppTheme.subtext, fontSize: 14 * m.scale)),
+            ),
+            if (isArmed)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF5C842),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    isArmed = false;
+                    throttleError = false;
+                  });
+                  Future.delayed(const Duration(milliseconds: 300),
+                          () => _confirmClose(context));
+                },
+                child: Text('Disarm first',
+                    style: TextStyle(
+                        color: Colors.black, fontSize: 13 * m.scale)),
+              ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF5C842),
+                backgroundColor: const Color(0xFFFF5757),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
                 Navigator.pop(ctx);
-                setState(() {
-                  isArmed = false;
-                  throttleError = false;
-                });
-                Future.delayed(const Duration(milliseconds: 300),
-                        () => _confirmClose(context));
+                _disconnectCamera();
+                _sendSafePacket();
+                socket?.close();
+                socket = null;
+                SystemNavigator.pop();
               },
-              child: const Text('Disarm first',
-                  style: TextStyle(color: Colors.black)),
+              child: Text(
+                isArmed ? 'Force close' : 'Close',
+                style: TextStyle(
+                    color: Colors.white, fontSize: 14 * m.scale),
+              ),
             ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF5757),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _disconnectCamera();
-              _sendSafePacket();
-              socket?.close();
-              socket = null;
-              SystemNavigator.pop();
-            },
-            child: Text(
-              isArmed ? 'Force close' : 'Close',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -3212,22 +3393,35 @@ class _DroneControllerState extends State<DroneController> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => WillPopScope(
-        onWillPop: () async => false,
-        child: AlertDialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-          content: Row(
-            children: [
-              CircularProgressIndicator(color: AppTheme.accent),
-              const SizedBox(width: 16),
-              Text('Saving video...',
-                  style: TextStyle(color: AppTheme.text)),
-            ],
+      builder: (ctx) {
+        final m = _dialogMetrics(ctx);
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            backgroundColor: AppTheme.surface,
+            insetPadding: m.inset,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 22 * m.scale,
+                  height: 22 * m.scale,
+                  child: CircularProgressIndicator(
+                      color: AppTheme.accent, strokeWidth: 2.5),
+                ),
+                SizedBox(width: 16 * m.scale),
+                Expanded(
+                  child: Text('Saving video...',
+                      style: TextStyle(
+                          color: AppTheme.text,
+                          fontSize: 14 * m.scale)),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
 
     try {
@@ -3241,50 +3435,69 @@ class _DroneControllerState extends State<DroneController> {
 
       showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.check_circle,
-                  color: Color(0xFF3DDA82), size: 22),
-              SizedBox(width: 8),
-              Text('Video saved!',
-                  style: TextStyle(color: Color(0xFF3DDA82))),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Duration: ${_formatTime(_recordSeconds)}',
-                  style: TextStyle(
-                      color: AppTheme.text, fontSize: 13)),
-              Text('Frames: $_framesSent',
-                  style: TextStyle(
-                      color: AppTheme.text, fontSize: 13)),
-              const SizedBox(height: 8),
-              Text(
-                'Saved to Gallery → QR Drone Controller',
-                style: TextStyle(
-                    color: AppTheme.accentLight, fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accent,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK',
-                  style: TextStyle(color: Colors.white)),
+        builder: (ctx) {
+          final m = _dialogMetrics(ctx);
+          return AlertDialog(
+            backgroundColor: AppTheme.surface,
+            insetPadding: m.inset,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Icon(Icons.check_circle,
+                    color: const Color(0xFF3DDA82),
+                    size: 20 * m.scale),
+                SizedBox(width: 8 * m.scale),
+                Expanded(
+                  child: Text('Video saved!',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: const Color(0xFF3DDA82),
+                          fontSize: 15 * m.scale)),
+                ),
+              ],
             ),
-          ],
-        ),
+            content: _scrollableDialogBody(
+              maxW: m.maxW,
+              maxH: m.maxH * 0.45,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Duration: ${_formatTime(_recordSeconds)}',
+                      style: TextStyle(
+                          color: AppTheme.text,
+                          fontSize: 13 * m.scale)),
+                  Text('Frames: $_framesSent',
+                      style: TextStyle(
+                          color: AppTheme.text,
+                          fontSize: 13 * m.scale)),
+                  SizedBox(height: 8 * m.scale),
+                  Text(
+                    'Saved to Gallery → QR Drone Controller',
+                    style: TextStyle(
+                        color: AppTheme.accentLight,
+                        fontSize: 12 * m.scale),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('OK',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: 14 * m.scale)),
+              ),
+            ],
+          );
+        },
       );
     } catch (e) {
       _DebugLog.add('Stop error: $e');
@@ -3311,9 +3524,13 @@ class _DroneControllerState extends State<DroneController> {
   @override
   Widget build(BuildContext context) {
     final size   = MediaQuery.of(context).size;
-    final outerR = size.height * 0.36;
-    final innerR = size.height * 0.12;
+    final scale  = (size.shortestSide / 360).clamp(0.72, 1.2);
+    // Clamp joysticks so they never crowd the center on small phones
+    final outerR = min(size.height * 0.36, size.width * 0.165);
+    final innerR = outerR * (0.12 / 0.36);
     final maxR   = outerR - innerR;
+    final joyTop = (size.height * 0.48 - outerR - size.height * 0.06)
+        .clamp(8.0, size.height);
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
@@ -3343,7 +3560,7 @@ class _DroneControllerState extends State<DroneController> {
                           Text('Waiting for feed...',
                               style: TextStyle(
                                   color: AppTheme.accent,
-                                  fontSize: 13)),
+                                  fontSize: 13 * scale)),
                         ],
                       ),
                     ),
@@ -3353,11 +3570,11 @@ class _DroneControllerState extends State<DroneController> {
                   Positioned.fill(
                     child: Container(
                       color: Colors.black,
-                      child: const Center(
+                      child: Center(
                         child: Text('Camera not available',
                             style: TextStyle(
-                                color: Color(0xFFFF5757),
-                                fontSize: 14)),
+                                color: const Color(0xFFFF5757),
+                                fontSize: 14 * scale)),
                       ),
                     ),
                   ),
@@ -3370,13 +3587,13 @@ class _DroneControllerState extends State<DroneController> {
 
               Column(
                 children: [
-                  _buildTopBar(context),
+                  _buildTopBar(context, scale),
                   Expanded(
                     child: Stack(
                       children: [
                         Positioned(
-                          left: size.width * 0.04,
-                          top: size.height * 0.48 - outerR - 30,
+                          left: size.width * 0.03,
+                          top: joyTop,
                           child: JoystickWidget(
                             key: _leftJoystickKey,
                             outerRadius: outerR,
@@ -3411,8 +3628,8 @@ class _DroneControllerState extends State<DroneController> {
                         ),
 
                         Positioned(
-                          right: size.width * 0.04,
-                          top: size.height * 0.48 - outerR - 30,
+                          right: size.width * 0.03,
+                          top: joyTop,
                           child: JoystickWidget(
                             outerRadius: outerR,
                             innerRadius: innerR,
@@ -3451,44 +3668,64 @@ class _DroneControllerState extends State<DroneController> {
 
                         if (!cameraEnabled)
                           Positioned(
-                            top: 0, bottom: 0,
-                            left: size.width * 0.34,
-                            right: size.width * 0.34,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _telemetryBox('ROLL',
-                                        '${rollDeg.toStringAsFixed(1)}°'),
-                                    _telemetryBox('PITCH',
-                                        '${pitchDeg.toStringAsFixed(1)}°'),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _telemetryBox('THR', '$thrPct%', highlight: true),
-                                    _telemetryBox('YAW',
-                                        '${yawDeg.toStringAsFixed(1)}°'),
-                                  ],
-                                ),
-                                const SizedBox(height: 48),
-                                // ── Headless + Flip buttons ──
-                                _buildFlightButtons(),
-                              ],
+                            top: 0,
+                            bottom: size.height * 0.14,
+                            left: size.width * 0.32,
+                            right: size.width * 0.32,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      _telemetryBox('ROLL',
+                                          '${rollDeg.toStringAsFixed(1)}°',
+                                          scale: scale),
+                                      SizedBox(width: 8 * scale),
+                                      _telemetryBox('PITCH',
+                                          '${pitchDeg.toStringAsFixed(1)}°',
+                                          scale: scale),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6 * scale),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      _telemetryBox('THR', '$thrPct%',
+                                          highlight: true, scale: scale),
+                                      SizedBox(width: 8 * scale),
+                                      _telemetryBox('YAW',
+                                          '${yawDeg.toStringAsFixed(1)}°',
+                                          scale: scale),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+
+                        Positioned(
+                          bottom: size.height * 0.06,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: _buildFlightButtons(scale),
+                            ),
+                          ),
+                        ),
 
                         if (isRecording)
                           Positioned(
                             top: 8, left: 0, right: 0,
                             child: Center(
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 4),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12 * scale,
+                                    vertical: 4 * scale),
                                 decoration: BoxDecoration(
                                   color:
                                   Colors.red.withOpacity(0.85),
@@ -3498,15 +3735,15 @@ class _DroneControllerState extends State<DroneController> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.circle,
+                                    Icon(Icons.circle,
                                         color: Colors.white,
-                                        size: 10),
-                                    const SizedBox(width: 6),
+                                        size: 10 * scale),
+                                    SizedBox(width: 6 * scale),
                                     Text(
                                       'REC  ${_formatTime(_recordSeconds)}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 12,
+                                        fontSize: 12 * scale,
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 1,
                                       ),
@@ -3537,147 +3774,182 @@ class _DroneControllerState extends State<DroneController> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, [double scale = 1.0]) {
+    final narrow = MediaQuery.of(context).size.width < 720;
     return Container(
       color: cameraEnabled
           ? Colors.black.withOpacity(0.6)
           : AppTheme.surface,
-      padding:
-      const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+      padding: EdgeInsets.symmetric(
+          horizontal: 12 * scale, vertical: 4 * scale),
       child: Row(
         children: [
-          // ── Close button ──
-          GestureDetector(
-            onTap: () => _confirmClose(context),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              margin: const EdgeInsets.only(right: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3A1010),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: const Color(0xFFFF5757)),
-              ),
-              child: const Icon(Icons.power_settings_new,
-                  color: Color(0xFFFF5757), size: 18),
-            ),
-          ),
-
-          // PAIR
-          GestureDetector(
-            onTap: togglePair,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: wifiError
-                    ? const Color(0xFF3A2E00)
-                    : isPaired
-                    ? const Color(0xFF0E2E1A)
-                    : const Color(0xFF3A1010),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: wifiError
-                      ? const Color(0xFFF5C842)
-                      : isPaired
-                      ? const Color(0xFF3DDA82)
-                      : const Color(0xFFFF5757),
-                ),
-              ),
-              child: Text(
-                wifiError
-                    ? 'NO WIFI'
-                    : isPaired ? 'PAIRED' : 'PAIR',
-                style: TextStyle(
-                  color: wifiError
-                      ? const Color(0xFFF5C842)
-                      : isPaired
-                      ? const Color(0xFF3DDA82)
-                      : const Color(0xFFFF5757),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ),
-
-          if (isPaired) ...[
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: toggleArm,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isArmed
-                      ? const Color(0xFF0E2E1A)
-                      : const Color(0xFF3A1010),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isArmed
-                        ? const Color(0xFF3DDA82)
-                        : const Color(0xFFFF5757),
-                    width: 1.5,
+          // ── Left cluster (may shrink) ──
+          Expanded(
+            child: Row(
+              children: [
+                // ── Close button ──
+                GestureDetector(
+                  onTap: () => _confirmClose(context),
+                  child: Container(
+                    padding: EdgeInsets.all(6 * scale),
+                    margin: EdgeInsets.only(right: 6 * scale),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A1010),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: const Color(0xFFFF5757)),
+                    ),
+                    child: Icon(Icons.power_settings_new,
+                        color: const Color(0xFFFF5757), size: 18 * scale),
                   ),
                 ),
-                child: Text(
-                  isArmed ? 'ARMED' : 'ARM',
-                  style: TextStyle(
-                    color: isArmed
-                        ? const Color(0xFF3DDA82)
-                        : const Color(0xFFFF5757),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ],
 
-          if (wifiError)
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Text(
-                isPaired ? 'Connect to Drone WiFi' : 'Connect to Drone WiFi',
-                style: const TextStyle(
-                    color: Color(0xFFF5C842),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500),
-              ),
-            )
-          else if (throttleError && throttle > 25)
-            const Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Text('Lower throttle to ARM',
-                  style: TextStyle(
-                      color: Color(0xFFF5C842), fontSize: 11)),
-            )
-          else if (serverError)
-              const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Server not available',
-                    style: TextStyle(
-                        color: Color(0xFFFF5757), fontSize: 11)),
-              )
-            else if (txError)
-                const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('Transmission error',
+                // PAIR
+                GestureDetector(
+                  onTap: togglePair,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: (narrow ? 10 : 16) * scale,
+                        vertical: 6 * scale),
+                    decoration: BoxDecoration(
+                      color: wifiError
+                          ? const Color(0xFF3A2E00)
+                          : isPaired
+                          ? const Color(0xFF0E2E1A)
+                          : const Color(0xFF3A1010),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: wifiError
+                            ? const Color(0xFFF5C842)
+                            : isPaired
+                            ? const Color(0xFF3DDA82)
+                            : const Color(0xFFFF5757),
+                      ),
+                    ),
+                    child: Text(
+                      wifiError
+                          ? 'NO WIFI'
+                          : isPaired ? 'PAIRED' : 'PAIR',
                       style: TextStyle(
-                          color: Color(0xFFFF5757), fontSize: 11)),
+                        color: wifiError
+                            ? const Color(0xFFF5C842)
+                            : isPaired
+                            ? const Color(0xFF3DDA82)
+                            : const Color(0xFFFF5757),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12 * scale,
+                      ),
+                    ),
+                  ),
                 ),
 
-          const Spacer(),
+                if (isPaired) ...[
+                  SizedBox(width: 6 * scale),
+                  GestureDetector(
+                    onTap: toggleArm,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: (narrow ? 10 : 16) * scale,
+                          vertical: 6 * scale),
+                      decoration: BoxDecoration(
+                        color: isArmed
+                            ? const Color(0xFF0E2E1A)
+                            : const Color(0xFF3A1010),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isArmed
+                              ? const Color(0xFF3DDA82)
+                              : const Color(0xFFFF5757),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Text(
+                        isArmed ? 'ARMED' : 'ARM',
+                        style: TextStyle(
+                          color: isArmed
+                              ? const Color(0xFF3DDA82)
+                              : const Color(0xFFFF5757),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12 * scale,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
 
+                if (wifiError)
+                  Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 8 * scale),
+                      child: Text(
+                        narrow ? 'Drone WiFi' : 'Connect to Drone WiFi',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: const Color(0xFFF5C842),
+                            fontSize: 11 * scale,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  )
+                else if (throttleError && throttle > 25)
+                  Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 8 * scale),
+                      child: Text(
+                          narrow ? 'Lower throttle' : 'Lower throttle to ARM',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: const Color(0xFFF5C842),
+                              fontSize: 11 * scale)),
+                    ),
+                  )
+                else if (serverError)
+                  Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 8 * scale),
+                      child: Text(
+                          narrow ? 'No server' : 'Server not available',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: const Color(0xFFFF5757),
+                              fontSize: 11 * scale)),
+                    ),
+                  )
+                else if (txError)
+                  Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 8 * scale),
+                      child: Text(
+                          narrow ? 'TX error' : 'Transmission error',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: const Color(0xFFFF5757),
+                              fontSize: 11 * scale)),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // ── Right cluster (always pinned to the right) ──
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
           if (cameraEnabled)
             GestureDetector(
               onTap: toggleRecording,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 5),
-                margin: const EdgeInsets.only(right: 8),
+                padding: EdgeInsets.symmetric(
+                    horizontal: (narrow ? 8 : 12) * scale,
+                    vertical: 5 * scale),
+                margin: EdgeInsets.only(right: 6 * scale),
                 decoration: BoxDecoration(
                   color: isRecording
                       ? Colors.red.withOpacity(0.2)
@@ -3701,21 +3973,23 @@ class _DroneControllerState extends State<DroneController> {
                       color: isRecording
                           ? Colors.red
                           : const Color(0xFFFF5757),
-                      size: 16,
+                      size: 15 * scale,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isRecording
-                          ? 'Stop  ${_formatTime(_recordSeconds)}'
-                          : 'Record',
-                      style: TextStyle(
-                        color: isRecording
-                            ? Colors.red
-                            : const Color(0xFFFF5757),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    if (!narrow) ...[
+                      SizedBox(width: 6 * scale),
+                      Text(
+                        isRecording
+                            ? 'Stop  ${_formatTime(_recordSeconds)}'
+                            : 'Record',
+                        style: TextStyle(
+                          color: isRecording
+                              ? Colors.red
+                              : const Color(0xFFFF5757),
+                          fontSize: 11 * scale,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -3725,9 +3999,10 @@ class _DroneControllerState extends State<DroneController> {
             GestureDetector(
               onTap: toggleCamera,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 5),
-                margin: const EdgeInsets.only(right: 8),
+                padding: EdgeInsets.symmetric(
+                    horizontal: (narrow ? 8 : 12) * scale,
+                    vertical: 5 * scale),
+                margin: EdgeInsets.only(right: 6 * scale),
                 decoration: BoxDecoration(
                   color: cameraEnabled
                       ? const Color(0xFF0E2E1A)
@@ -3751,19 +4026,21 @@ class _DroneControllerState extends State<DroneController> {
                       color: cameraEnabled
                           ? const Color(0xFF3DDA82)
                           : AppTheme.subtext,
-                      size: 18,
+                      size: 17 * scale,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      cameraEnabled ? 'Cam ON' : 'Cam OFF',
-                      style: TextStyle(
-                        color: cameraEnabled
-                            ? const Color(0xFF3DDA82)
-                            : AppTheme.subtext,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    if (!narrow) ...[
+                      SizedBox(width: 6 * scale),
+                      Text(
+                        cameraEnabled ? 'Cam ON' : 'Cam OFF',
+                        style: TextStyle(
+                          color: cameraEnabled
+                              ? const Color(0xFF3DDA82)
+                              : AppTheme.subtext,
+                          fontSize: 11 * scale,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -3802,7 +4079,7 @@ class _DroneControllerState extends State<DroneController> {
                   ),
                   content: SizedBox(
                     width: double.maxFinite,
-                    height: 350,
+                    height: MediaQuery.of(context).size.height * 0.55,
                     child: allLogs.isEmpty
                         ? const Center(
                         child: Text('No logs',
@@ -3857,10 +4134,10 @@ class _DroneControllerState extends State<DroneController> {
               );
             },
             child: Container(
-              padding: const EdgeInsets.all(6),
-              margin: const EdgeInsets.only(right: 4),
+              padding: EdgeInsets.all(6 * scale),
+              margin: EdgeInsets.only(right: 4 * scale),
               child: Icon(Icons.bug_report,
-                  color: AppTheme.subtext, size: 20),
+                  color: AppTheme.subtext, size: 20 * scale),
             ),
           ),
 
@@ -3882,10 +4159,12 @@ class _DroneControllerState extends State<DroneController> {
               }
             }),
             child: Container(
-              padding: const EdgeInsets.all(6),
+              padding: EdgeInsets.all(6 * scale),
               child: Icon(Icons.settings,
-                  color: AppTheme.accentLight, size: 22),
+                  color: AppTheme.accentLight, size: 22 * scale),
             ),
+          ),
+            ],
           ),
         ],
       ),
@@ -3893,10 +4172,10 @@ class _DroneControllerState extends State<DroneController> {
   }
 
   Widget _telemetryBox(String label, String value,
-      {bool highlight = false}) {
+      {bool highlight = false, double scale = 1.0}) {
     return Container(
-      width: 58,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      width: 58 * scale,
+      padding: EdgeInsets.symmetric(vertical: 4 * scale),
       decoration: BoxDecoration(
         color: cameraEnabled
             ? Colors.black.withOpacity(0.5)
@@ -3908,14 +4187,14 @@ class _DroneControllerState extends State<DroneController> {
         children: [
           Text(label,
               style: TextStyle(
-                  color: AppTheme.subtext, fontSize: 9)),
+                  color: AppTheme.subtext, fontSize: 9 * scale)),
           Text(
             value,
             style: TextStyle(
               color: highlight
                   ? const Color(0xFFF5C842)
                   : AppTheme.accent,
-              fontSize: 13,
+              fontSize: 13 * scale,
               fontWeight: FontWeight.bold,
             ),
           ),
