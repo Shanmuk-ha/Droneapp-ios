@@ -919,7 +919,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _SectionHeader(title: 'About'),
           _SettingsItem(
             title: 'App version',
-            subtitle: '1.0.8 (build 41)',
+            subtitle: '1.0.9 (build 42)',
             icon: Icons.info_outline,
             onTap: () {},
             showChevron: false,
@@ -1377,7 +1377,7 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
         child: Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Padding(
+            child: Padding(`
               padding: EdgeInsets.symmetric(
                 horizontal: screenW * 0.04,
                 vertical: screenH * 0.02,
