@@ -1377,7 +1377,7 @@ class _LevelCalibrationPageState extends State<LevelCalibrationPage>
         child: Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Padding(`
+            child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: screenW * 0.04,
                 vertical: screenH * 0.02,
@@ -2651,6 +2651,7 @@ class _DroneControllerState extends State<DroneController> {
   int _txFailCount = 0;
   static const int _maxTxFails = 10; // 10 consecutive fails = disconnected
   Timer? _heartbeatTimer;
+  Timer? _controlSendTimer;
 
   Uint8List? currentFrame;
   VideoStreamService? _videoService;
@@ -2727,6 +2728,7 @@ class _DroneControllerState extends State<DroneController> {
   void dispose() {
     _saveValues();
     _heartbeatTimer?.cancel();
+    _stopControlSend();
     socket?.close();
     _videoService?.disconnect();
     _recordTimer?.cancel();
@@ -2921,6 +2923,7 @@ class _DroneControllerState extends State<DroneController> {
     if (!isPaired) return; // Already unpaired
     _DebugLog.add('Drone disconnected — unpairing');
     _heartbeatTimer?.cancel();
+    _stopControlSend();
     _disconnectCamera();
     socket?.close();
     socket = null;
@@ -2985,10 +2988,28 @@ class _DroneControllerState extends State<DroneController> {
     });
   }
 
+  void _startControlSend() {
+    _controlSendTimer?.cancel();
+    // Stream current stick/PID values at 20 Hz for the whole armed session
+    _controlSendTimer = Timer.periodic(
+      const Duration(milliseconds: 50),
+      (_) {
+        if (!isPaired || !isArmed || socket == null) return;
+        sendData();
+      },
+    );
+  }
+
+  void _stopControlSend() {
+    _controlSendTimer?.cancel();
+    _controlSendTimer = null;
+  }
+
   void togglePair() async {
     if (isArmed) return;
     if (isPaired) {
       _heartbeatTimer?.cancel();
+      _stopControlSend();
       _disconnectCamera();
       setState(() {
         isPaired      = false;
@@ -3181,16 +3202,18 @@ class _DroneControllerState extends State<DroneController> {
 
   void toggleArm() {
     if (!isPaired) return;
-    if (!isArmed && throttle > 25) {
+    if (throttle > 25) {
       setState(() => throttleError = true);
       return;
     }
     setState(() { isArmed = !isArmed; throttleError = false; });
     if (isArmed) {
-      // Armed — heartbeat not needed, sendData handles detection
+      // Armed — heartbeat not needed; continuous sendData stream
       _heartbeatTimer?.cancel();
+      _startControlSend();
     } else {
-      // Disarmed — restart heartbeat to detect disconnection
+      // Disarmed — stop control stream, restart heartbeat
+      _stopControlSend();
       _startHeartbeat();
     }
   }
@@ -3300,10 +3323,12 @@ class _DroneControllerState extends State<DroneController> {
                 ),
                 onPressed: () {
                   Navigator.pop(ctx);
+                  _stopControlSend();
                   setState(() {
                     isArmed = false;
                     throttleError = false;
                   });
+                  _startHeartbeat();
                   Future.delayed(const Duration(milliseconds: 300),
                           () => _confirmClose(context));
                 },
@@ -3319,6 +3344,8 @@ class _DroneControllerState extends State<DroneController> {
               ),
               onPressed: () {
                 Navigator.pop(ctx);
+                _stopControlSend();
+                _heartbeatTimer?.cancel();
                 _disconnectCamera();
                 _sendSafePacket();
                 socket?.close();
@@ -3615,11 +3642,19 @@ class _DroneControllerState extends State<DroneController> {
                                         .toInt();
                                 if (yaw > 114 && yaw < 140)
                                   yaw = 127;
+                                if (throttleError && throttle <= 25) {
+                                  throttleError = false;
+                                }
                               });
                               sendData();
                             },
                             onRelease: () {
-                              setState(() => yaw = 127);
+                              setState(() {
+                                yaw = 127;
+                                if (throttleError && throttle <= 25) {
+                                  throttleError = false;
+                                }
+                              });
                               sendData();
                             },
                             resetX: true,
@@ -3900,7 +3935,11 @@ class _DroneControllerState extends State<DroneController> {
                     child: Padding(
                       padding: EdgeInsets.only(left: 8 * scale),
                       child: Text(
-                          narrow ? 'Lower throttle' : 'Lower throttle to ARM',
+                          narrow
+                              ? 'Lower throttle'
+                              : (isArmed
+                                  ? 'Lower throttle to DISARM'
+                                  : 'Lower throttle to ARM'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -4511,6 +4550,3 @@ class _DebugLog {
 
   static List<String> get logs => List.from(_memLogs);
 }
-
-
-// 4114 - colour
